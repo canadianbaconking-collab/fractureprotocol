@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fracture Protocol Prototype</title>
+    <link rel="stylesheet" href="./src/ui/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <h1>Containment Core</h1>
+        <div id="coreOrb" class="core-orb NORMAL"></div>
+        <p id="coreStateLabel">NORMAL</p>
+        <div class="stats">
+          <span id="turnStat">Turn: 0</span>
+          <span id="integrityStat">Integrity: 100</span>
+          <span id="pressureStat">Pressure: 0</span>
+          <span id="phaseStat">Phase: PLAYING</span>
+        </div>
+      </section>
+
+      <section class="grid-panel">
+        <div id="grid" class="grid"></div>
+      </section>
+
+      <section class="tray-panel">
+        <h2>Modules</h2>
+        <div id="moduleTray" class="tray"></div>
+      </section>
+    </main>
+    <script type="module" src="./src/ui/app.js"></script>
+  </body>
+</html>
