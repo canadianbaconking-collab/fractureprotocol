@@ -1,53 +1,63 @@
-import { MODULE_ORDER } from '../src/game/config.js';
-import { createRng } from '../src/game/random.js';
-import { listValidPlacements, reduce } from '../src/game/reducer.js';
-import { createInitialState } from '../src/game/state.js';
+import { reduce, listValidPlacements } from '../src/game/reducer.js';
+import { cloneState, createInitialState } from '../src/game/state.js';
 
-function chooseAction(state, rng) {
-  for (const moduleId of MODULE_ORDER) {
-    const placements = listValidPlacements(state, moduleId);
-    if (placements.length > 0) {
-      const index = Math.floor(rng() * placements.length);
-      return { type: 'PLACE_MODULE', moduleId, ...placements[index] };
+function scoreState(state) {
+  const hazardPenalty = state.grid.flat().reduce((acc, cell) => {
+    if (cell.hazard === 'CORRUPTION') return acc + 3;
+    if (cell.hazard === 'LEAK') return acc + 2;
+    return acc;
+  }, 0);
+  return state.integrity * 3 - state.pressure * 2 - hazardPenalty;
+}
+
+function chooseGreedyMove(state) {
+  let bestAction = null;
+  let bestScore = -Infinity;
+
+  for (let index = 0; index < state.tray.length; index += 1) {
+    const placements = listValidPlacements(state, index);
+    for (const placement of placements) {
+      const next = reduce(cloneState(state), { type: 'PLACE_SELECTED', index, ...placement });
+      const score = scoreState(next);
+      if (score > bestScore) {
+        bestScore = score;
+        bestAction = { type: 'PLACE_SELECTED', index, ...placement };
+      }
     }
   }
-  return null;
+  return bestAction;
 }
 
 function runOne(seed) {
-  const rng = createRng(seed);
-  let state = createInitialState();
-
+  let state = createInitialState({ seed });
   while (state.phase === 'PLAYING') {
-    const action = chooseAction(state, rng);
+    const action = chooseGreedyMove(state);
     if (!action) break;
-    state = reduce(state, action, rng);
+    state = reduce(state, action);
   }
-
-  return {
-    phase: state.phase,
-    turns: state.turn,
-    integrity: state.integrity,
-    pressure: state.pressure,
-  };
+  return state;
 }
 
 const runs = 100;
-const summaries = [];
+const results = [];
 for (let i = 0; i < runs; i += 1) {
-  summaries.push(runOne(1000 + i));
+  results.push(runOne(1000 + i));
 }
 
-const wins = summaries.filter((s) => s.phase === 'WON').length;
-const losses = summaries.filter((s) => s.phase === 'LOST').length;
-const avgTurns = summaries.reduce((acc, s) => acc + s.turns, 0) / runs;
-const avgIntegrity = summaries.reduce((acc, s) => acc + s.integrity, 0) / runs;
-const avgPressure = summaries.reduce((acc, s) => acc + s.pressure, 0) / runs;
+const wins = results.filter((s) => s.phase === 'WON').length;
+const losses = results.filter((s) => s.phase === 'LOST').length;
+const avgTurns = results.reduce((acc, s) => acc + s.turn, 0) / runs;
+const lost = results.filter((s) => s.phase === 'LOST');
+const avgPressureAtLoss = lost.length ? lost.reduce((acc, s) => acc + s.pressure, 0) / lost.length : 0;
+const avgIntegrityAtLoss = lost.length ? lost.reduce((acc, s) => acc + s.integrity, 0) / lost.length : 0;
+const causeCount = new Map();
+for (const s of lost) causeCount.set(s.lossCause, (causeCount.get(s.lossCause) ?? 0) + 1);
+const commonLoss = [...causeCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'N/A';
 
-console.log('Simulation results');
-console.log(`Runs: ${runs}`);
+console.log('Simulation results (100 seeded runs)');
 console.log(`Wins: ${wins}`);
 console.log(`Losses: ${losses}`);
-console.log(`Average turns: ${avgTurns.toFixed(2)}`);
-console.log(`Average integrity: ${avgIntegrity.toFixed(2)}`);
-console.log(`Average pressure: ${avgPressure.toFixed(2)}`);
+console.log(`Avg turns survived: ${avgTurns.toFixed(2)}`);
+console.log(`Avg pressure at loss: ${avgPressureAtLoss.toFixed(2)}`);
+console.log(`Avg integrity at loss: ${avgIntegrityAtLoss.toFixed(2)}`);
+console.log(`Most common loss cause: ${commonLoss}`);
