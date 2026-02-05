@@ -1,7 +1,8 @@
-import { CORE_STATE_THRESHOLDS, GRID_SIZE, MODULE_DEFS } from './config.js';
-import { cloneState } from './state.js';
+import { BRACE_SHAPES, CORE_STATE_THRESHOLDS, GRID_SIZE, MODULE_DEFS } from './config.js';
+import { cloneState, refillTray, rerollTray, withReselectedModule } from './state.js';
+import { randomFloat01, randomInt } from './random.js';
 
-const CARDINAL_STEPS = [
+const CARDINAL = [
   [1, 0],
   [-1, 0],
   [0, 1],
@@ -9,140 +10,134 @@ const CARDINAL_STEPS = [
 ];
 
 function inBounds(x, y) {
-  return x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE;
+  return x >= 0 && y >= 0 && x < GRID_SIZE && y < GRID_SIZE;
 }
 
-function getCellsForPlacement(moduleDef, originX, originY) {
-  return moduleDef.shape.map(([dx, dy]) => ({ x: originX + dx, y: originY + dy }));
+function shapeForEntry(entry) {
+  if (!entry) return [];
+  if (entry.moduleId === 'BRACE') {
+    const key = entry.shapeKey ?? 'BLOCK';
+    return BRACE_SHAPES[key]?.cells ?? BRACE_SHAPES.BLOCK.cells;
+  }
+  return [[0, 0]];
 }
 
-function canPlaceModule(grid, moduleDef, originX, originY) {
-  return getCellsForPlacement(moduleDef, originX, originY).every(({ x, y }) => {
-    if (!inBounds(x, y)) return false;
-    return grid[y][x].module === null;
-  });
+export function getPlacementCells(entry, originX, originY) {
+  return shapeForEntry(entry).map(([dx, dy]) => ({ x: originX + dx, y: originY + dy }));
 }
 
-function applyModuleEffect(state, moduleDef, cells) {
-  switch (moduleDef.effect) {
-    case 'brace': {
+export function canPlaceEntry(grid, entry, x, y) {
+  const cells = getPlacementCells(entry, x, y);
+  return cells.every(({ x: cx, y: cy }) => inBounds(cx, cy) && grid[cy][cx].module === null);
+}
+
+function deriveContainmentState(pressure, integrity) {
+  if (pressure >= 100 || integrity <= 0) return 'BREACH';
+  if (pressure <= CORE_STATE_THRESHOLDS.NORMAL.maxPressure && integrity >= CORE_STATE_THRESHOLDS.NORMAL.minIntegrity) return 'NORMAL';
+  if (pressure <= CORE_STATE_THRESHOLDS.WARNING.maxPressure && integrity >= CORE_STATE_THRESHOLDS.WARNING.minIntegrity) return 'WARNING';
+  return 'CRITICAL';
+}
+
+function markShieldAdjacency(state, x, y) {
+  for (const [dx, dy] of CARDINAL) {
+    const nx = x + dx;
+    const ny = y + dy;
+    if (!inBounds(nx, ny)) continue;
+    const neighbor = state.grid[ny][nx];
+    if (neighbor.module !== null) {
+      neighbor.shielded = true;
+    }
+  }
+}
+
+function resolveModuleEffects(state, entry, cells) {
+  switch (entry.moduleId) {
+    case 'SHIELD_CORE': {
       for (const { x, y } of cells) {
-        state.grid[y][x].brace += 1;
+        state.grid[y][x].shielded = true;
+        markShieldAdjacency(state, x, y);
       }
-      state.pressure = Math.max(0, state.pressure - 1);
       break;
     }
-    case 'shieldCore': {
-      const center = { x: 3, y: 3 };
-      for (let y = center.y - 1; y <= center.y + 1; y += 1) {
-        for (let x = center.x - 1; x <= center.x + 1; x += 1) {
-          if (inBounds(x, y)) {
-            state.grid[y][x].shielded = true;
+    case 'PURGE': {
+      // Purge rule: clear a 3x3 centered area around placement.
+      for (const { x, y } of cells) {
+        for (let py = y - 1; py <= y + 1; py += 1) {
+          for (let px = x - 1; px <= x + 1; px += 1) {
+            if (inBounds(px, py)) state.grid[py][px].hazard = null;
           }
         }
       }
       break;
     }
-    case 'purge': {
-      for (const { x, y } of cells) {
-        if (state.grid[y][x].hazard === 'CORRUPTION') {
-          state.grid[y][x].hazard = null;
-        }
-      }
+    case 'PUMP': {
+      state.pressure = Math.max(0, state.pressure - state.config.pumpPressureReduction);
       break;
     }
-    case 'pump': {
-      state.pressure = Math.max(0, state.pressure - 10);
+    case 'CYCLER': {
+      rerollTray(state);
       break;
     }
-    case 'cycler': {
-      for (const { x, y } of cells) {
-        for (const [sx, sy] of CARDINAL_STEPS) {
-          const tx = x + sx;
-          const ty = y + sy;
-          if (inBounds(tx, ty) && state.grid[ty][tx].hazard === 'LEAK') {
-            state.grid[ty][tx].hazard = null;
-          }
-        }
-      }
-      break;
-    }
+    case 'BRACE':
     default:
       break;
   }
 }
 
-function spreadCorruption(state, rng) {
+function spreadCorruption(state) {
   const additions = [];
   for (let y = 0; y < GRID_SIZE; y += 1) {
     for (let x = 0; x < GRID_SIZE; x += 1) {
       if (state.grid[y][x].hazard !== 'CORRUPTION') continue;
-      for (const [sx, sy] of CARDINAL_STEPS) {
-        const nx = x + sx;
-        const ny = y + sy;
+      for (const [dx, dy] of CARDINAL) {
+        const nx = x + dx;
+        const ny = y + dy;
         if (!inBounds(nx, ny)) continue;
         const target = state.grid[ny][nx];
-        if (target.hazard || target.shielded) continue;
-        if (rng() < state.config.corruptionSpreadChance) {
-          additions.push([nx, ny]);
-        }
+        if (target.hazard || target.module || target.shielded) continue;
+        const roll = randomFloat01(state.rngState);
+        state.rngState = roll.state;
+        if (roll.value < state.config.corruptionSpreadChance) additions.push([nx, ny]);
       }
     }
   }
-  for (const [x, y] of additions) {
-    state.grid[y][x].hazard = 'CORRUPTION';
-  }
+  for (const [x, y] of additions) state.grid[y][x].hazard = 'CORRUPTION';
 }
 
-function spawnRandomHazards(state, rng) {
+function spawnHazards(state) {
   for (let y = 0; y < GRID_SIZE; y += 1) {
     for (let x = 0; x < GRID_SIZE; x += 1) {
       const cell = state.grid[y][x];
-      if (cell.hazard || cell.shielded) continue;
-      const roll = rng();
-      if (roll < state.config.leakSpawnChance) {
+      if (cell.hazard || cell.module || cell.shielded) continue;
+      const roll = randomFloat01(state.rngState);
+      state.rngState = roll.state;
+      if (roll.value < state.config.leakSpawnChance) {
         cell.hazard = 'LEAK';
-      } else if (roll < state.config.leakSpawnChance + state.config.corruptionSpawnChance) {
+      } else if (roll.value < state.config.leakSpawnChance + state.config.corruptionSpawnChance) {
         cell.hazard = 'CORRUPTION';
       }
     }
   }
 }
 
-function applyHazardDamage(state) {
-  let leakCount = 0;
+function applyLeakDamage(state) {
+  let damage = 0;
   for (let y = 0; y < GRID_SIZE; y += 1) {
     for (let x = 0; x < GRID_SIZE; x += 1) {
       const cell = state.grid[y][x];
       if (cell.hazard === 'LEAK') {
-        leakCount += 1;
-      }
-      if (cell.hazard === 'CORRUPTION' && cell.brace > 0) {
-        cell.hazard = null;
-        cell.brace -= 1;
+        damage += cell.shielded ? Math.max(0, state.config.leakDamagePerSource - state.config.shieldLeakMitigation) : state.config.leakDamagePerSource;
       }
     }
   }
-  state.integrity -= leakCount * state.config.leakDamagePerSource;
-}
-
-function deriveContainmentState(pressure, integrity) {
-  if (pressure >= 100 || integrity <= 0) return 'BREACH';
-  if (pressure <= CORE_STATE_THRESHOLDS.NORMAL.maxPressure && integrity >= CORE_STATE_THRESHOLDS.NORMAL.minIntegrity) {
-    return 'NORMAL';
-  }
-  if (pressure <= CORE_STATE_THRESHOLDS.WARNING.maxPressure && integrity >= CORE_STATE_THRESHOLDS.WARNING.minIntegrity) {
-    return 'WARNING';
-  }
-  return 'CRITICAL';
+  state.integrity = Math.max(0, state.integrity - damage);
 }
 
 function hasLegalMove(state) {
-  for (const moduleId of Object.keys(MODULE_DEFS)) {
-    const def = MODULE_DEFS[moduleId];
+  for (const entry of state.tray) {
     for (let y = 0; y < GRID_SIZE; y += 1) {
       for (let x = 0; x < GRID_SIZE; x += 1) {
-        if (canPlaceModule(state.grid, def, x, y)) return true;
+        if (canPlaceEntry(state.grid, entry, x, y)) return true;
       }
     }
   }
@@ -150,59 +145,82 @@ function hasLegalMove(state) {
 }
 
 function finalizeTurn(state) {
-  state.turn += 1;
   state.pressure = Math.min(100, state.pressure + state.config.pressurePerTurn);
   state.containmentState = deriveContainmentState(state.pressure, state.integrity);
 
-  if (state.integrity <= 0 || state.pressure >= 100) {
+  if (state.integrity <= 0) {
     state.phase = 'LOST';
+    state.lossCause = 'INTEGRITY';
+  } else if (state.pressure >= 100) {
+    state.phase = 'LOST';
+    state.lossCause = 'PRESSURE';
   } else if (state.turn >= state.config.winTurns) {
     state.phase = 'WON';
   } else if (!hasLegalMove(state)) {
     state.phase = 'LOST';
+    state.lossCause = 'NO_MOVES';
+  } else {
+    state.turn += 1;
   }
 }
 
-export function reduce(state, action, rng = Math.random) {
+function consumeTrayEntry(state, index) {
+  state.tray.splice(index, 1);
+  refillTray(state);
+  withReselectedModule(state);
+}
+
+export function reduce(state, action) {
   if (state.phase !== 'PLAYING') return state;
 
-  if (action.type !== 'PLACE_MODULE') {
-    return state;
+  if (action.type === 'SELECT_MODULE') {
+    if (action.index < 0 || action.index >= state.tray.length) return state;
+    const next = cloneState(state);
+    next.selectedModuleIndex = action.index;
+    withReselectedModule(next);
+    return next;
   }
 
-  const moduleDef = MODULE_DEFS[action.moduleId];
-  if (!moduleDef) return state;
+  if (action.type !== 'PLACE_SELECTED') return state;
 
-  if (!canPlaceModule(state.grid, moduleDef, action.x, action.y)) {
-    return state;
-  }
+  const entry = state.tray[action.index ?? state.selectedModuleIndex];
+  const entryIndex = action.index ?? state.selectedModuleIndex;
+  if (!entry) return state;
+  if (!canPlaceEntry(state.grid, entry, action.x, action.y)) return state;
 
   const next = cloneState(state);
-  const cells = getCellsForPlacement(moduleDef, action.x, action.y);
+  const currentEntry = next.tray[entryIndex];
+  const cells = getPlacementCells(currentEntry, action.x, action.y);
   for (const { x, y } of cells) {
-    next.grid[y][x].module = moduleDef.id;
+    const cell = next.grid[y][x];
+    cell.module = currentEntry.moduleId;
+    cell.moduleMeta = currentEntry.shapeKey ?? null;
   }
 
-  applyModuleEffect(next, moduleDef, cells);
-  spreadCorruption(next, rng);
-  spawnRandomHazards(next, rng);
-  applyHazardDamage(next);
+  resolveModuleEffects(next, currentEntry, cells);
+  consumeTrayEntry(next, entryIndex);
+  spreadCorruption(next);
+  spawnHazards(next);
+  applyLeakDamage(next);
   finalizeTurn(next);
-  next.log.push(`Turn ${next.turn}: ${moduleDef.name} at (${action.x},${action.y})`);
+  next.log.push(`T${state.turn}: ${MODULE_DEFS[currentEntry.moduleId].name} @ ${action.x},${action.y}`);
 
   return next;
 }
 
-export function listValidPlacements(state, moduleId) {
-  const moduleDef = MODULE_DEFS[moduleId];
-  if (!moduleDef) return [];
-  const placements = [];
+export function listValidPlacements(state, trayIndex) {
+  const entry = typeof trayIndex === 'number' ? state.tray[trayIndex] : state.tray[state.selectedModuleIndex];
+  if (!entry) return [];
+  const out = [];
   for (let y = 0; y < GRID_SIZE; y += 1) {
     for (let x = 0; x < GRID_SIZE; x += 1) {
-      if (canPlaceModule(state.grid, moduleDef, x, y)) {
-        placements.push({ x, y });
-      }
+      if (canPlaceEntry(state.grid, entry, x, y)) out.push({ x, y });
     }
   }
-  return placements;
+  return out;
+}
+
+export function sampleTrayIndex(state) {
+  const roll = randomInt(state.rngState, state.tray.length || 1);
+  return roll.value;
 }

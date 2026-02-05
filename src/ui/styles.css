@@ -5,7 +5,7 @@
 
 body {
   margin: 0;
-  background: radial-gradient(circle at top, #11193a, #05070f 60%);
+  background: radial-gradient(circle at top, #11203c, #05070f 58%);
   color: #e6ecff;
 }
 
@@ -19,17 +19,14 @@ body {
   padding: 1rem;
 }
 
-.hero,
-.grid-panel,
-.tray-panel {
-  border: 1px solid #22396f;
+.hero, .grid-panel, .tray-panel {
+  border: 1px solid #2e4f85;
   border-radius: 12px;
-  background: rgba(12, 17, 35, 0.9);
+  background: rgba(10, 16, 34, 0.93);
   padding: 0.75rem;
 }
 
-.hero h1,
-.tray-panel h2 {
+.hero h1, .tray-panel h2 {
   margin: 0 0 0.5rem;
   font-size: 1rem;
   letter-spacing: 0.08em;
@@ -41,14 +38,12 @@ body {
   height: 88px;
   border-radius: 999px;
   margin: 0 auto;
-  border: 2px solid #88a2ff;
-  box-shadow: 0 0 20px #5f7bff;
 }
 
-.core-orb.NORMAL { background: radial-gradient(circle, #7be4ff, #2a4dbe 70%); }
-.core-orb.WARNING { background: radial-gradient(circle, #ffe77b, #be7a2a 70%); }
-.core-orb.CRITICAL { background: radial-gradient(circle, #ff8f7b, #be2a2a 70%); }
-.core-orb.BREACH { background: radial-gradient(circle, #ff7be6, #5f123f 70%); box-shadow: 0 0 24px #ff5ad6; }
+.core-orb.NORMAL { background: radial-gradient(circle, #7be4ff, #2a4dbe 70%); box-shadow: 0 0 20px #57cfff; }
+.core-orb.WARNING { background: radial-gradient(circle, #ffe77b, #be7a2a 70%); box-shadow: 0 0 20px #ffc35a; }
+.core-orb.CRITICAL { background: radial-gradient(circle, #ff9f6a, #b5331f 70%); box-shadow: 0 0 20px #ff6f52; }
+.core-orb.BREACH { background: radial-gradient(circle, #ff6077, #4b0916 70%); box-shadow: 0 0 24px #ff3f62; }
 
 .stats {
   margin-top: 0.5rem;
@@ -74,38 +69,74 @@ body {
   aspect-ratio: 1 / 1;
   border: 1px solid #214080;
   border-radius: 4px;
-  background: #0f1a39;
+  background: #101b3b;
   position: relative;
 }
 
-.cell.module { background: #275cff; }
+.cell.module-brace { background: linear-gradient(160deg, #3758c8, #264087); }
+.cell.module-shield { background: linear-gradient(160deg, #15b9ca, #0c5f7d); }
+.cell.module-purge { background: linear-gradient(160deg, #ffb564, #9e5a13); }
+.cell.module-pump { background: linear-gradient(160deg, #68dd87, #2f8746); }
+.cell.module-cycler { background: linear-gradient(160deg, #43d3ff, #126488); }
+
 .cell.hazard-corruption::after,
 .cell.hazard-leak::after {
   content: '';
   position: absolute;
-  inset: 25%;
+  inset: 24%;
   border-radius: 50%;
 }
 
-.cell.hazard-corruption::after { background: #ac49ff; }
-.cell.hazard-leak::after { background: #45ffdc; }
-.cell.shielded { outline: 1px solid #ffe67d; }
+.cell.hazard-corruption::after { background: #f65262; box-shadow: 0 0 8px #f65262; }
+.cell.hazard-leak::after { background: #7c59ff; box-shadow: 0 0 8px #7c59ff; }
+.cell.shielded { outline: 2px solid #5df4ff; }
 
 .tray {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.35rem;
 }
 
 .module-btn {
-  padding: 0.6rem;
+  padding: 0.45rem;
   border-radius: 8px;
-  border: 1px solid #2f5acf;
+  border: 1px solid #3567d2;
   background: linear-gradient(180deg, #1d2c62, #172145);
   color: #dce5ff;
-  text-align: left;
-  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  font-size: 0.74rem;
+  min-height: 70px;
 }
 
-.module-btn.active { border-color: #ffd96d; box-shadow: 0 0 8px #ffd96d; }
-.module-btn:disabled { opacity: 0.6; }
+.module-btn small { opacity: 0.7; font-size: 0.62rem; }
+.module-btn.active { border-color: #a4fcff; box-shadow: 0 0 10px #58f0ff; }
+.module-btn:disabled { opacity: 0.45; }
+
+.palette-shield { border-color: #32f2ff66; }
+.palette-pump { border-color: #7eff9e66; }
+.palette-purge { border-color: #ffd39366; }
+.palette-cycler { border-color: #75dcff66; }
+
+
+.boot-splash {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 0.7rem;
+  background: radial-gradient(circle, #0e1b38 10%, #04060d 70%);
+  z-index: 20;
+  transition: opacity 240ms ease;
+}
+.boot-splash.hidden { opacity: 0; pointer-events: none; }
+.boot-splash .logo {
+  font-weight: 800;
+  font-size: 2rem;
+  letter-spacing: 0.08em;
+  color: #9df6ff;
+  text-shadow: 0 0 18px #35e9ff;
+}
+.boot-splash p { text-align: center; color: #8cb0ff; margin: 0; }

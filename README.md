@@ -1,29 +1,52 @@
 # Fracture Protocol Prototype
 
-A deterministic, web-first 2D puzzle prototype for an Android-friendly layout.
+Deterministic, reducer-driven neon containment puzzle prototype (web-first + Android packaging path).
 
-## Core Loop
-1. Place one module on the 8x8 grid.
-2. Resolve module effect.
-3. Tick/spawn hazards.
-4. Increase pressure.
-5. Apply integrity damage.
-6. Update containment state (NORMAL/WARNING/CRITICAL/BREACH).
-7. Check win/loss.
+## Gameplay model
+- 8x8 grid, deterministic seeded RNG, pure reducer state transitions.
+- Stats: `pressure` (0..100), `integrity` (0..100), `turn`.
+- Containment states: `NORMAL`, `WARNING`, `CRITICAL`, `BREACH`.
+- Win: survive `winTurns` turns.
+- Loss: integrity reaches `0`, pressure reaches `100`, or no legal move.
 
-## Implemented V1 Content
-- Modules (Set A): **Brace**, **Shield Core**, **Purge**, **Pump**, **Cycler**.
-- Hazards: **Corruption** (orthogonal spread), **Leak** (integrity damage each turn).
-- Win condition: survive configurable `winTurns`.
-- Loss condition: `integrity <= 0` or `pressure >= 100` (plus no legal moves).
+## Module Set A
+Bottom tray shows 5 module cards, with **3 deterministic tray entries active at a time**.
 
-## Project Layout
-- `src/game/`: pure deterministic game logic and reducer.
-- `src/ui/`: browser UI shell and renderer.
-- `tests/`: unit tests for turn flow, hazard spread, and end conditions.
-- `scripts/simulate.js`: runs 100 deterministic heuristic playthroughs and prints aggregate metrics.
+1. **Brace**: place polyomino brace shapes (extensible shape library).
+2. **Shield Core**: place 1x1 core; adjacent filled tiles become shielded.
+3. **Purge Unit**: clears hazards in a **3x3 centered** pattern.
+4. **Pump**: immediate pressure reduction (`-8`, floor `0`).
+5. **Cycler**: rerolls all 3 tray entries from the seeded RNG stream.
 
-## Commands
-- `npm test` — run unit tests.
-- `npm run simulate` — run batch simulation harness.
-- `npm start` — launch local web server at `http://localhost:4173`.
+## Hazards
+- **Corruption**: spreads orthogonally into empty, unshielded tiles each turn (seed-deterministic).
+- **Leak**: applies integrity damage per leak each turn; shielded leaks are mitigated.
+
+## Run / Test / Simulate
+- `npm start` — web dev server (`http://localhost:4173`).
+- `npm test` — headless unit tests (no DOM dependency).
+- `npm run simulate` — 100 seeded heuristic playthroughs with aggregate metrics.
+- `npm run build` — create web bundle in `dist/`.
+
+## Capacitor / Android
+> Note: In restricted environments without npm registry access, installing Capacitor packages may fail. The repo is configured for Capacitor, but dependency installation is required before sync/open.
+
+1. Install deps: `npm install`
+2. Sync web build to native project: `npm run cap:sync`
+3. Open Android Studio project: `npm run cap:open-android`
+
+Config defaults:
+- App name: `Fracture Protocol`
+- Package id: `com.frostedlogic.fractureprotocol` (editable in `capacitor.config.ts`)
+- Splash setup: launch branding configured via Capacitor SplashScreen plugin settings.
+
+### Android artifact outputs (after Android Studio build)
+- Debug APK: `android/app/build/outputs/apk/debug/app-debug.apk`
+- Release AAB: `android/app/build/outputs/bundle/release/app-release.aab`
+
+### Signing notes (Android Studio)
+- Build > Generate Signed Bundle / APK > Android App Bundle.
+- Use/produce a keystore and alias.
+- Keep `keystore.jks` out of git; store passwords in local secure storage / CI secrets.
+
+BUILD_ID: 2026-02-05T05:08:46Z
