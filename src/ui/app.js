@@ -29,7 +29,6 @@ const gameOverOverlayEl = document.getElementById('gameOverOverlay');
 const startRunButtonEl = document.getElementById('startRunButton');
 const howToButtonEl = document.getElementById('howToButton');
 const helpButtonEl = document.getElementById('helpButton');
-const backToStartButtonEl = document.getElementById('backToStartButton');
 const playAgainButtonEl = document.getElementById('playAgainButton');
 const howToCloseEls = document.querySelectorAll('[data-close-howto]');
 const winTurnsEls = document.querySelectorAll('[data-win-turns]');
@@ -38,9 +37,6 @@ const moduleDeltaNameEl = document.getElementById('moduleDeltaName');
 const moduleDeltaBadgesEl = document.getElementById('moduleDeltaBadges');
 const moduleDeltaPanelEl = document.getElementById('moduleDeltaPanel');
 const finalScoreValueEl = document.getElementById('finalScoreValue');
-const finalTurnsValueEl = document.getElementById('finalTurnsValue');
-const finalIntegrityValueEl = document.getElementById('finalIntegrityValue');
-const finalPressureValueEl = document.getElementById('finalPressureValue');
 const highScoreListEl = document.getElementById('highScoreList');
 
 let state = createInitialState({ seed: 4242 });
@@ -209,6 +205,7 @@ function renderOverlays() {
     gameOverOverlayEl.classList.toggle('is-active', showGameOverOverlay);
     gameOverOverlayEl.setAttribute('aria-hidden', (!showGameOverOverlay).toString());
   }
+  document.body.classList.toggle('game-over-active', showGameOverOverlay);
 }
 
 function computeFinalScore(currentState) {
@@ -262,10 +259,8 @@ function renderHighScoreList(scores) {
     const item = document.createElement('li');
     const scoreText = document.createElement('span');
     scoreText.textContent = entry.score.toLocaleString();
-    const metaText = document.createElement('span');
-    metaText.className = 'score-meta mono';
-    metaText.textContent = `T${entry.turns} · I${entry.integrity} · P${entry.pressure}`;
-    item.append(scoreText, metaText);
+    scoreText.className = 'score-value mono';
+    item.append(scoreText);
     highScoreListEl.append(item);
   });
 }
@@ -276,9 +271,6 @@ function renderGameOver(currentState) {
   const turns = currentState.turn;
   const score = computeFinalScore(currentState);
   if (finalScoreValueEl) finalScoreValueEl.textContent = score.toLocaleString();
-  if (finalTurnsValueEl) finalTurnsValueEl.textContent = turns.toString();
-  if (finalIntegrityValueEl) finalIntegrityValueEl.textContent = integrity.toString();
-  if (finalPressureValueEl) finalPressureValueEl.textContent = pressure.toString();
   const scores = updateHighScores({ score, turns, integrity, pressure });
   renderHighScoreList(scores);
 }
@@ -356,9 +348,6 @@ function wireOverlayButtons() {
       showHowToOverlay = false;
       renderOverlays();
     }
-  });
-  backToStartButtonEl?.addEventListener('click', () => {
-    startNewRun({ showStart: true });
   });
   playAgainButtonEl?.addEventListener('click', () => {
     startNewRun({ showStart: false });

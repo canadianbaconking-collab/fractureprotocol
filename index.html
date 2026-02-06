@@ -139,32 +139,16 @@
       <div class="overlay-card game-over-card">
         <p class="overlay-eyebrow">Containment Failure</p>
         <h2>Game Over</h2>
-        <p class="overlay-subhead">Containment core breached. Final telemetry:</p>
-        <div class="game-over-metrics">
-          <div class="metric">
-            <span class="metric-label">Final Score</span>
-            <span id="finalScoreValue" class="metric-value mono">0</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Turns Survived</span>
-            <span id="finalTurnsValue" class="metric-value mono">0</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Final Integrity</span>
-            <span id="finalIntegrityValue" class="metric-value mono">0</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Final Pressure</span>
-            <span id="finalPressureValue" class="metric-value mono">0</span>
-          </div>
+        <div class="game-over-score">
+          <span class="score-label">Final Score</span>
+          <span id="finalScoreValue" class="score-value mono">0</span>
         </div>
         <div class="game-over-scores">
           <h3>High Scores</h3>
           <ol id="highScoreList" class="high-score-list"></ol>
         </div>
         <div class="overlay-actions">
-          <button id="backToStartButton" class="btn-ghost" type="button">Back to Start</button>
-          <button id="playAgainButton" class="btn-primary" type="button">Play Again</button>
+          <button id="playAgainButton" class="btn-primary" type="button">RESTART</button>
         </div>
       </div>
     </div>
