@@ -32,6 +32,7 @@ const winTurnsEls = document.querySelectorAll('[data-win-turns]');
 const winTurnsLineEls = document.querySelectorAll('[data-win-turns-line]');
 const moduleDeltaNameEl = document.getElementById('moduleDeltaName');
 const moduleDeltaBadgesEl = document.getElementById('moduleDeltaBadges');
+const moduleDeltaPanelEl = document.getElementById('moduleDeltaPanel');
 
 let state = createInitialState({ seed: 4242 });
 let previousState = null;
@@ -118,16 +119,20 @@ function renderHero() {
   coreOrbEl.className = `core-orb ${state.containmentState}`;
   coreStateLabelEl.textContent = state.containmentState;
   turnStatEl.textContent = `Turn: ${state.turn}`;
-  integrityStatEl.textContent = `Integrity: ${Math.max(0, state.integrity)}`;
-  pressureStatEl.textContent = `Pressure: ${state.pressure}`;
+  integrityStatEl.textContent = `Integrity: ${Math.max(0, Math.round(state.integrity))}`;
+  pressureStatEl.textContent = `Pressure: ${Math.round(state.pressure)}`;
   phaseStatEl.textContent = `Phase: ${state.phase}${state.lossCause ? ` (${state.lossCause})` : ''}`;
 }
 
 function renderModuleDeltas(moduleId) {
   if (!moduleDeltaBadgesEl || !moduleDeltaNameEl) return;
-  if (!moduleId) return;
+  if (!moduleId) {
+    if (moduleDeltaPanelEl) moduleDeltaPanelEl.dataset.module = '';
+    return;
+  }
   if (moduleId === lastDeltaModuleId) return;
   lastDeltaModuleId = moduleId;
+  if (moduleDeltaPanelEl) moduleDeltaPanelEl.dataset.module = moduleId;
   const summary = getModuleDeltaSummary(moduleId, state);
   moduleDeltaNameEl.textContent = summary.title;
   moduleDeltaBadgesEl.innerHTML = '';

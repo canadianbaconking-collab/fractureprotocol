@@ -126,19 +126,17 @@ export function summarizeResults(results) {
   const losses = results.filter((s) => s.phase === 'LOST').length;
   const avgTurns = runs ? results.reduce((acc, s) => acc + s.turn, 0) / runs : 0;
   const lost = results.filter((s) => s.phase === 'LOST');
-  const avgPressureAtLoss = lost.length ? lost.reduce((acc, s) => acc + s.pressure, 0) / lost.length : 0;
-  const avgIntegrityAtLoss = lost.length ? lost.reduce((acc, s) => acc + s.integrity, 0) / lost.length : 0;
-  const causeCount = new Map();
-  for (const s of lost) causeCount.set(s.lossCause, (causeCount.get(s.lossCause) ?? 0) + 1);
-  const commonLoss = [...causeCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'N/A';
+  const lossBreakdown = lost.reduce((acc, s) => {
+    if (!s.lossCause) return acc;
+    acc[s.lossCause] = (acc[s.lossCause] ?? 0) + 1;
+    return acc;
+  }, {});
 
   return {
     runs,
     wins,
     losses,
     avgTurns,
-    avgPressureAtLoss,
-    avgIntegrityAtLoss,
-    commonLoss,
+    lossBreakdown,
   };
 }
