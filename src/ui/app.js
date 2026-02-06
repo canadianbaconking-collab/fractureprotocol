@@ -3,6 +3,16 @@ import { getModuleDeltaSummary } from '../game/moduleEffects.js';
 import { reduce } from '../game/reducer.js';
 import { createInitialState } from '../game/state.js';
 
+console.log('APP_JS_BOOT');
+
+window.addEventListener('error', (event) => {
+  console.error('APP_JS_ERROR', event.error ?? event.message, event);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('APP_JS_UNHANDLED_REJECTION', event.reason);
+});
+
 const gridEl = document.getElementById('grid');
 const trayEl = document.getElementById('moduleTray');
 const coreOrbEl = document.getElementById('coreOrb');
