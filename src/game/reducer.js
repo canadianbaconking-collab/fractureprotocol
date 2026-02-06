@@ -43,29 +43,29 @@ export function onboardingModifiers(turn) {
     return {
       corruptionSpawnMultiplier: 0,
       corruptionSpreadMultiplier: 0,
-      leakDamageMultiplier: 0.3,
+      leakSpawnMultiplier: 0,
+      leakSpreadMultiplier: 0,
+      leakDamageMultiplier: 0.25,
       pressurePerTurnMultiplier: 0.6,
     };
   }
-  if (turn <= 7) {
-    return {
-      corruptionSpawnMultiplier: 0.5,
-      corruptionSpreadMultiplier: 0.5,
-      leakDamageMultiplier: 0.5,
-      pressurePerTurnMultiplier: 0.8,
-    };
-  }
   if (turn <= 10) {
+    const leakRamp = (turn - 3) / 7;
+    const leakDamageMultiplier = 0.25 + leakRamp * 0.75;
     return {
-      corruptionSpawnMultiplier: 0.8,
-      corruptionSpreadMultiplier: 0.8,
-      leakDamageMultiplier: 0.8,
+      corruptionSpawnMultiplier: turn <= 7 ? 0.5 : 0.8,
+      corruptionSpreadMultiplier: turn <= 7 ? 0.5 : 0.8,
+      leakSpawnMultiplier: leakRamp,
+      leakSpreadMultiplier: leakRamp,
+      leakDamageMultiplier,
       pressurePerTurnMultiplier: 0.8,
     };
   }
   return {
     corruptionSpawnMultiplier: 1,
     corruptionSpreadMultiplier: 1,
+    leakSpawnMultiplier: 1,
+    leakSpreadMultiplier: 1,
     leakDamageMultiplier: 1,
     pressurePerTurnMultiplier: 1,
   };
@@ -141,17 +141,18 @@ function spreadCorruption(state) {
 }
 
 function spawnHazards(state) {
-  const { corruptionSpawnMultiplier } = onboardingModifiers(state.turn);
+  const { corruptionSpawnMultiplier, leakSpawnMultiplier } = onboardingModifiers(state.turn);
   const corruptionSpawnChance = state.config.corruptionSpawnChance * corruptionSpawnMultiplier;
+  const leakSpawnChance = state.config.leakSpawnChance * leakSpawnMultiplier;
   for (let y = 0; y < GRID_SIZE; y += 1) {
     for (let x = 0; x < GRID_SIZE; x += 1) {
       const cell = state.grid[y][x];
       if (cell.hazard || cell.module || cell.shielded) continue;
       const roll = randomFloat01(state.rngState);
       state.rngState = roll.state;
-      if (roll.value < state.config.leakSpawnChance) {
+      if (roll.value < leakSpawnChance) {
         cell.hazard = 'LEAK';
-      } else if (roll.value < state.config.leakSpawnChance + corruptionSpawnChance) {
+      } else if (roll.value < leakSpawnChance + corruptionSpawnChance) {
         cell.hazard = 'CORRUPTION';
       }
     }
