@@ -6,7 +6,7 @@ Deterministic, reducer-driven neon containment puzzle prototype (web-first + And
 - 8x8 grid, deterministic seeded RNG, pure reducer state transitions.
 - Stats: `pressure` (0..100), `integrity` (0..100), `turn`.
 - Containment states: `NORMAL`, `WARNING`, `CRITICAL`, `BREACH`.
-- Win: survive `winTurns` turns.
+- Win: survive `winTurns` turns (default `75`).
 - Loss: integrity reaches `0`, pressure reaches `100`, or no legal move.
 
 ## How to Play
@@ -26,11 +26,11 @@ Bottom tray shows 5 module cards, with **3 deterministic tray entries active at 
 - **Leak**: applies integrity damage per leak each turn; shielded leaks are mitigated.
 
 ## Onboarding hazard ramp
-Early turns ease new players into containment management without changing deterministic behavior. Turn-based modifiers apply to hazard spawning, leak damage, and early pressure gain:
-- **Turns 1–3:** corruption spawn disabled, leak damage ×0.3, reduced pressure tick.
-- **Turns 4–7:** reduced corruption spawn, leak damage ×0.5.
-- **Turns 8–10:** near-normal hazard behavior with ×0.8 multipliers.
-- **Turn 11+:** full baseline behavior.
+Early turns ease new players into containment management without changing deterministic behavior. Turn-based modifiers apply to corruption spawn/spread, leak damage, and pressure gain:
+- **Turns 1–3:** corruption spawn/spread disabled, leak damage ×0.3, pressure tick ×0.6.
+- **Turns 4–7:** corruption spawn/spread ×0.5, leak damage ×0.5, pressure tick ×0.8.
+- **Turns 8–10:** corruption spawn/spread ×0.8, leak damage ×0.8, pressure tick ×0.8.
+- **Turn 11+:** full baseline behavior (×1.0).
 
 ## Run / Test / Simulate
 - `npm start` — web dev server (`http://localhost:4173`).

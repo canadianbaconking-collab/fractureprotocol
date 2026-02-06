@@ -42,26 +42,30 @@ function onboardingModifiers(turn) {
   if (turn <= 3) {
     return {
       corruptionSpawnMultiplier: 0,
+      corruptionSpreadMultiplier: 0,
       leakDamageMultiplier: 0.3,
-      pressurePerTurnMultiplier: 0.5,
+      pressurePerTurnMultiplier: 0.6,
     };
   }
   if (turn <= 7) {
     return {
       corruptionSpawnMultiplier: 0.5,
+      corruptionSpreadMultiplier: 0.5,
       leakDamageMultiplier: 0.5,
-      pressurePerTurnMultiplier: 1,
+      pressurePerTurnMultiplier: 0.8,
     };
   }
   if (turn <= 10) {
     return {
       corruptionSpawnMultiplier: 0.8,
+      corruptionSpreadMultiplier: 0.8,
       leakDamageMultiplier: 0.8,
-      pressurePerTurnMultiplier: 1,
+      pressurePerTurnMultiplier: 0.8,
     };
   }
   return {
     corruptionSpawnMultiplier: 1,
+    corruptionSpreadMultiplier: 1,
     leakDamageMultiplier: 1,
     pressurePerTurnMultiplier: 1,
   };
@@ -114,6 +118,9 @@ function resolveModuleEffects(state, entry, cells) {
 }
 
 function spreadCorruption(state) {
+  const { corruptionSpreadMultiplier } = onboardingModifiers(state.turn);
+  const spreadChance = state.config.corruptionSpreadChance * corruptionSpreadMultiplier;
+  if (spreadChance <= 0) return;
   const additions = [];
   for (let y = 0; y < GRID_SIZE; y += 1) {
     for (let x = 0; x < GRID_SIZE; x += 1) {
@@ -126,7 +133,7 @@ function spreadCorruption(state) {
         if (target.hazard || target.module || target.shielded) continue;
         const roll = randomFloat01(state.rngState);
         state.rngState = roll.state;
-        if (roll.value < state.config.corruptionSpreadChance) additions.push([nx, ny]);
+        if (roll.value < spreadChance) additions.push([nx, ny]);
       }
     }
   }
