@@ -24,23 +24,37 @@ const phaseStatEl = document.getElementById('phaseStat');
 const bootSplashEl = document.getElementById('bootSplash');
 const startOverlayEl = document.getElementById('startOverlay');
 const howToOverlayEl = document.getElementById('howToOverlay');
+const breachOverlayEl = document.getElementById('breachOverlay');
+const gameOverOverlayEl = document.getElementById('gameOverOverlay');
 const startRunButtonEl = document.getElementById('startRunButton');
 const howToButtonEl = document.getElementById('howToButton');
 const helpButtonEl = document.getElementById('helpButton');
+const backToStartButtonEl = document.getElementById('backToStartButton');
+const playAgainButtonEl = document.getElementById('playAgainButton');
 const howToCloseEls = document.querySelectorAll('[data-close-howto]');
 const winTurnsEls = document.querySelectorAll('[data-win-turns]');
 const winTurnsLineEls = document.querySelectorAll('[data-win-turns-line]');
 const moduleDeltaNameEl = document.getElementById('moduleDeltaName');
 const moduleDeltaBadgesEl = document.getElementById('moduleDeltaBadges');
 const moduleDeltaPanelEl = document.getElementById('moduleDeltaPanel');
+const finalScoreValueEl = document.getElementById('finalScoreValue');
+const finalTurnsValueEl = document.getElementById('finalTurnsValue');
+const finalIntegrityValueEl = document.getElementById('finalIntegrityValue');
+const finalPressureValueEl = document.getElementById('finalPressureValue');
+const highScoreListEl = document.getElementById('highScoreList');
 
 let state = createInitialState({ seed: 4242 });
 let previousState = null;
 let showStartOverlay = true;
 let showHowToOverlay = false;
+let showGameOverOverlay = false;
 let shakeTimeout = null;
 let hoveredModuleId = null;
 let lastDeltaModuleId = null;
+let breachTriggered = false;
+let breachTimeout = null;
+
+const HIGH_SCORE_KEY = 'fractureProtocolHighScores';
 
 function modulePalette(moduleId) {
   switch (moduleId) {
@@ -162,18 +176,20 @@ function wireBackButton() {
       renderOverlays();
       return;
     }
+    if (event.key === 'Escape' && showGameOverOverlay) {
+      startNewRun({ showStart: true });
+      return;
+    }
     if (event.key === 'Escape' && state.phase !== 'PLAYING') {
-      state = createInitialState({ seed: 4242 });
-      render();
+      startNewRun({ showStart: true });
     }
   });
 
   if (window.Capacitor?.Plugins?.App) {
     window.Capacitor.Plugins.App.addListener('backButton', ({ canGoBack }) => {
       if (canGoBack) return;
-      if (state.phase !== 'PLAYING') {
-        state = createInitialState({ seed: 4242 });
-        render();
+      if (showGameOverOverlay || state.phase !== 'PLAYING') {
+        startNewRun({ showStart: true });
       } else if (window.confirm('Exit Fracture Protocol?')) {
         window.Capacitor.Plugins.App.exitApp();
       }
@@ -189,6 +205,130 @@ function renderOverlays() {
     howToOverlayEl.classList.toggle('is-active', showHowToOverlay);
     howToOverlayEl.setAttribute('aria-hidden', (!showHowToOverlay).toString());
   }
+  if (gameOverOverlayEl) {
+    gameOverOverlayEl.classList.toggle('is-active', showGameOverOverlay);
+    gameOverOverlayEl.setAttribute('aria-hidden', (!showGameOverOverlay).toString());
+  }
+}
+
+function computeFinalScore(currentState) {
+  const integrity = Math.max(0, Math.round(currentState.integrity));
+  const pressure = Math.round(currentState.pressure);
+  const turns = currentState.turn;
+  return Math.max(0, Math.round(turns * 120 + integrity * 8 - pressure * 4));
+}
+
+function loadHighScores() {
+  if (!window.localStorage) return [];
+  try {
+    const stored = window.localStorage.getItem(HIGH_SCORE_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('HIGH_SCORE_LOAD_FAILED', error);
+    return [];
+  }
+}
+
+function saveHighScores(scores) {
+  if (!window.localStorage) return;
+  try {
+    window.localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(scores));
+  } catch (error) {
+    console.warn('HIGH_SCORE_SAVE_FAILED', error);
+  }
+}
+
+function updateHighScores(entry) {
+  const scores = loadHighScores();
+  scores.push(entry);
+  scores.sort((a, b) => b.score - a.score);
+  const trimmed = scores.slice(0, 10);
+  saveHighScores(trimmed);
+  return trimmed;
+}
+
+function renderHighScoreList(scores) {
+  if (!highScoreListEl) return;
+  highScoreListEl.innerHTML = '';
+  if (!scores.length) {
+    const item = document.createElement('li');
+    item.textContent = 'No recorded runs yet.';
+    highScoreListEl.append(item);
+    return;
+  }
+  scores.forEach((entry) => {
+    const item = document.createElement('li');
+    const scoreText = document.createElement('span');
+    scoreText.textContent = entry.score.toLocaleString();
+    const metaText = document.createElement('span');
+    metaText.className = 'score-meta mono';
+    metaText.textContent = `T${entry.turns} · I${entry.integrity} · P${entry.pressure}`;
+    item.append(scoreText, metaText);
+    highScoreListEl.append(item);
+  });
+}
+
+function renderGameOver(currentState) {
+  const integrity = Math.max(0, Math.round(currentState.integrity));
+  const pressure = Math.round(currentState.pressure);
+  const turns = currentState.turn;
+  const score = computeFinalScore(currentState);
+  if (finalScoreValueEl) finalScoreValueEl.textContent = score.toLocaleString();
+  if (finalTurnsValueEl) finalTurnsValueEl.textContent = turns.toString();
+  if (finalIntegrityValueEl) finalIntegrityValueEl.textContent = integrity.toString();
+  if (finalPressureValueEl) finalPressureValueEl.textContent = pressure.toString();
+  const scores = updateHighScores({ score, turns, integrity, pressure });
+  renderHighScoreList(scores);
+}
+
+function resetBreachUI() {
+  document.body.classList.remove('breach-active');
+  breachOverlayEl?.classList.remove('is-active');
+  if (breachTimeout) {
+    window.clearTimeout(breachTimeout);
+    breachTimeout = null;
+  }
+  breachTriggered = false;
+}
+
+function startNewRun({ showStart = false } = {}) {
+  resetBreachUI();
+  state = createInitialState({ seed: 4242 });
+  previousState = null;
+  showStartOverlay = showStart;
+  showHowToOverlay = false;
+  showGameOverOverlay = false;
+  render();
+  renderOverlays();
+}
+
+function triggerBreachSequence() {
+  if (breachTriggered) return;
+  breachTriggered = true;
+  showStartOverlay = false;
+  showHowToOverlay = false;
+  showGameOverOverlay = false;
+  renderOverlays();
+
+  const rect = coreOrbEl?.getBoundingClientRect();
+  if (rect && breachOverlayEl) {
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    breachOverlayEl.style.setProperty('--breach-x', `${x}px`);
+    breachOverlayEl.style.setProperty('--breach-y', `${y}px`);
+  }
+
+  document.body.classList.add('breach-active');
+  breachOverlayEl?.classList.add('is-active');
+
+  breachTimeout = window.setTimeout(() => {
+    breachOverlayEl?.classList.remove('is-active');
+    renderGameOver(state);
+    showGameOverOverlay = true;
+    renderOverlays();
+  }, 850);
 }
 
 function wireOverlayButtons() {
@@ -217,6 +357,12 @@ function wireOverlayButtons() {
       renderOverlays();
     }
   });
+  backToStartButtonEl?.addEventListener('click', () => {
+    startNewRun({ showStart: true });
+  });
+  playAgainButtonEl?.addEventListener('click', () => {
+    startNewRun({ showStart: false });
+  });
 }
 
 function render() {
@@ -231,6 +377,13 @@ function render() {
     shakeTimeout = window.setTimeout(() => {
       document.body.classList.remove('integrity-shake');
     }, 450);
+  }
+  if (!breachTriggered) {
+    const lossNow = state.phase === 'LOST' || state.integrity <= 0;
+    const lossPreviously = prevState?.phase === 'LOST' || prevState?.integrity <= 0;
+    if (lossNow && !lossPreviously) {
+      triggerBreachSequence();
+    }
   }
   previousState = state;
 }
