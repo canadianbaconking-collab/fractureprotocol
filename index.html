@@ -37,6 +37,11 @@
       <section class="tray-panel">
         <h2>Modules</h2>
         <div id="moduleTray" class="tray"></div>
+        <div id="moduleDeltaPanel" class="module-delta-panel" aria-live="polite">
+          <p class="module-delta-label">Module Effect</p>
+          <div id="moduleDeltaName" class="module-delta-name">--</div>
+          <div id="moduleDeltaBadges" class="module-delta-badges"></div>
+        </div>
       </section>
     </main>
     <div id="startOverlay" class="overlay is-active" role="dialog" aria-modal="true">
@@ -44,11 +49,47 @@
         <p class="overlay-eyebrow">Protocol Online</p>
         <h2>Fracture Protocol</h2>
         <p class="overlay-subhead">Stabilize containment. Survive the protocol.</p>
-        <div class="overlay-rule">
-          <strong>Win:</strong> survive <span class="mono">winTurns</span> turns.
+        <div class="overlay-goals">
+          <div class="goal-card goal-win">
+            <p class="goal-label">SURVIVE</p>
+            <p class="goal-text">Hold containment for <span class="mono" data-win-turns></span> turns.</p>
+          </div>
+          <div class="goal-card goal-loss">
+            <p class="goal-label">Containment breach!</p>
+            <p class="goal-text">Integrity hits 0 or Pressure reaches 100.</p>
+          </div>
         </div>
-        <div class="overlay-rule">
-          <strong>Loss:</strong> Integrity 0 or Pressure 100.
+        <div class="overlay-panels">
+          <div class="panel panel-win">
+            <div class="panel-header">
+              <div class="panel-icon panel-icon-stable" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <span>WIN EXAMPLE</span>
+            </div>
+            <div class="panel-lines">
+              <span data-win-turns-line></span>
+              <span>Integrity: 42</span>
+              <span>Pressure: 67</span>
+            </div>
+          </div>
+          <div class="panel panel-loss">
+            <div class="panel-header">
+              <div class="panel-icon panel-icon-breach" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <span>LOSS EXAMPLE</span>
+              <span class="panel-stamp">BREACH</span>
+            </div>
+            <div class="panel-lines">
+              <span>Integrity: 0</span>
+              <span>OR Pressure: 100</span>
+            </div>
+          </div>
         </div>
         <div class="overlay-actions">
           <button id="startRunButton" class="btn-primary" type="button">Start Run</button>
@@ -66,7 +107,7 @@
           <li>Place modules onto the 8x8 grid during the PLAYING phase.</li>
           <li>Three deterministic modules are active in the tray at once.</li>
           <li>Shielded tiles protect against spreading hazards and leaks.</li>
-          <li><strong>Win:</strong> survive <span class="mono">winTurns</span> turns.</li>
+          <li><strong>Win:</strong> survive <span class="mono" data-win-turns></span> turns.</li>
           <li><strong>Loss:</strong> Integrity 0 or Pressure 100.</li>
         </ul>
         <div class="overlay-divider"></div>
