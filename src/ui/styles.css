@@ -515,6 +515,70 @@ body.integrity-shake .hero {
   box-shadow: 0 0 16px rgba(79, 213, 255, 0.8);
 }
 
+.breach-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 35;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  --breach-x: 50%;
+  --breach-y: 50%;
+}
+
+.breach-overlay.is-active {
+  opacity: 1;
+}
+
+.breach-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--breach-x) var(--breach-y), rgba(255, 210, 220, 0.95), rgba(255, 64, 96, 0.4) 35%, transparent 60%);
+  opacity: 0;
+  animation: breach-flash 750ms ease-out forwards;
+}
+
+.breach-ring {
+  position: absolute;
+  left: var(--breach-x);
+  top: var(--breach-y);
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 120, 170, 0.85);
+  box-shadow: 0 0 24px rgba(255, 80, 130, 0.6);
+  transform: translate(-50%, -50%) scale(0.2);
+  opacity: 0;
+  animation: breach-ring 850ms ease-out forwards;
+}
+
+.breach-ring.breach-ring-secondary {
+  border-color: rgba(255, 200, 235, 0.75);
+  box-shadow: 0 0 32px rgba(255, 165, 205, 0.6);
+  animation-delay: 90ms;
+}
+
+body.breach-active .hero {
+  animation: breach-push-up 800ms ease-out forwards;
+}
+
+body.breach-active .grid-panel {
+  animation: breach-push-left 800ms ease-out forwards;
+}
+
+body.breach-active .tray-panel {
+  animation: breach-push-right 800ms ease-out forwards;
+}
+
+body.breach-active .core-orb {
+  animation: breach-core-pop 700ms ease-out forwards;
+}
+
+body.breach-active .stats,
+body.breach-active #coreStateLabel {
+  animation: breach-fade 650ms ease-out forwards;
+}
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -789,6 +853,123 @@ body.integrity-shake .hero {
   justify-self: end;
 }
 
+.game-over-overlay {
+  z-index: 40;
+  background: rgba(2, 6, 16, 0.92);
+  overflow: hidden;
+}
+
+.game-over-overlay .overlay-card {
+  position: relative;
+  z-index: 2;
+  border-color: rgba(255, 120, 150, 0.6);
+  box-shadow: 0 0 30px rgba(255, 120, 160, 0.35);
+}
+
+.game-over-card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f3b9c8;
+}
+
+.game-over-metrics {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metric {
+  border-radius: 10px;
+  padding: 0.55rem 0.6rem;
+  background: rgba(28, 14, 26, 0.75);
+  border: 1px solid rgba(255, 140, 170, 0.35);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 200, 220, 0.8);
+}
+
+.metric-value {
+  font-size: 1.05rem;
+  color: #ffe5ef;
+}
+
+.game-over-scores {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.high-score-list {
+  list-style: decimal;
+  padding-left: 1.2rem;
+  margin: 0;
+  display: grid;
+  gap: 0.3rem;
+  color: #f1d5df;
+  font-size: 0.85rem;
+}
+
+.high-score-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  align-items: baseline;
+}
+
+.high-score-list .score-meta {
+  font-size: 0.7rem;
+  color: rgba(255, 210, 225, 0.65);
+}
+
+.crt-static {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.crt-noise,
+.crt-scanlines,
+.crt-flicker {
+  position: absolute;
+  inset: -50%;
+  opacity: 0.7;
+  mix-blend-mode: screen;
+}
+
+.crt-noise {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 4px),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08), transparent 60%);
+  background-size: 3px 3px, 4px 4px, 180px 180px;
+  animation: crt-noise 220ms steps(2, end) infinite;
+}
+
+.crt-scanlines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.4) 0 2px,
+    rgba(0, 0, 0, 0.1) 2px 4px
+  );
+  background-size: 100% 4px;
+  animation: crt-scan 1.2s linear infinite;
+  opacity: 0.55;
+}
+
+.crt-flicker {
+  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.16), transparent 60%);
+  animation: crt-flicker 1.6s ease-in-out infinite;
+  opacity: 0.35;
+}
+
 .module-delta-panel {
   margin-top: 0.75rem;
   border-radius: 12px;
@@ -893,3 +1074,56 @@ body.integrity-shake .hero {
   text-shadow: 0 0 18px #35e9ff;
 }
 .boot-splash p { text-align: center; color: #8cb0ff; margin: 0; }
+
+@keyframes breach-flash {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes breach-ring {
+  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0.9; }
+  70% { opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(12); opacity: 0; }
+}
+
+@keyframes breach-push-up {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(0, -70px) scale(1.04); opacity: 0; }
+}
+
+@keyframes breach-push-left {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(-60px, 20px) scale(1.03); opacity: 0; }
+}
+
+@keyframes breach-push-right {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(60px, 30px) scale(1.03); opacity: 0; }
+}
+
+@keyframes breach-core-pop {
+  0% { transform: scale(1); filter: brightness(1); }
+  40% { transform: scale(1.25); filter: brightness(1.5); }
+  100% { transform: scale(0.3); filter: brightness(0.6); opacity: 0; }
+}
+
+@keyframes breach-fade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes crt-noise {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(6%, -6%); }
+}
+
+@keyframes crt-scan {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+@keyframes crt-flicker {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.6; }
+}

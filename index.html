@@ -44,6 +44,11 @@
         </div>
       </section>
     </main>
+    <div id="breachOverlay" class="breach-overlay" aria-hidden="true">
+      <div class="breach-flash"></div>
+      <div class="breach-ring"></div>
+      <div class="breach-ring breach-ring-secondary"></div>
+    </div>
     <div id="startOverlay" class="overlay is-active" role="dialog" aria-modal="true">
       <div class="overlay-card">
         <p class="overlay-eyebrow">Protocol Online</p>
@@ -123,6 +128,44 @@
           </ul>
         </div>
         <button class="btn-ghost overlay-close" type="button" data-close-howto>Close</button>
+      </div>
+    </div>
+    <div id="gameOverOverlay" class="overlay game-over-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="crt-static" aria-hidden="true">
+        <div class="crt-noise"></div>
+        <div class="crt-scanlines"></div>
+        <div class="crt-flicker"></div>
+      </div>
+      <div class="overlay-card game-over-card">
+        <p class="overlay-eyebrow">Containment Failure</p>
+        <h2>Game Over</h2>
+        <p class="overlay-subhead">Containment core breached. Final telemetry:</p>
+        <div class="game-over-metrics">
+          <div class="metric">
+            <span class="metric-label">Final Score</span>
+            <span id="finalScoreValue" class="metric-value mono">0</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Turns Survived</span>
+            <span id="finalTurnsValue" class="metric-value mono">0</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Final Integrity</span>
+            <span id="finalIntegrityValue" class="metric-value mono">0</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Final Pressure</span>
+            <span id="finalPressureValue" class="metric-value mono">0</span>
+          </div>
+        </div>
+        <div class="game-over-scores">
+          <h3>High Scores</h3>
+          <ol id="highScoreList" class="high-score-list"></ol>
+        </div>
+        <div class="overlay-actions">
+          <button id="backToStartButton" class="btn-ghost" type="button">Back to Start</button>
+          <button id="playAgainButton" class="btn-primary" type="button">Play Again</button>
+        </div>
       </div>
     </div>
     <script type="module" src="./src/ui/app.js"></script>
