@@ -25,6 +25,13 @@ Bottom tray shows 5 module cards, with **3 deterministic tray entries active at 
 - **Corruption**: spreads orthogonally into empty, unshielded tiles each turn (seed-deterministic).
 - **Leak**: applies integrity damage per leak each turn; shielded leaks are mitigated.
 
+## Onboarding hazard ramp
+Early turns ease new players into containment management without changing deterministic behavior. Turn-based modifiers apply to hazard spawning, leak damage, and early pressure gain:
+- **Turns 1–3:** corruption spawn disabled, leak damage ×0.3, reduced pressure tick.
+- **Turns 4–7:** reduced corruption spawn, leak damage ×0.5.
+- **Turns 8–10:** near-normal hazard behavior with ×0.8 multipliers.
+- **Turn 11+:** full baseline behavior.
+
 ## Run / Test / Simulate
 - `npm start` — web dev server (`http://localhost:4173`).
 - `npm test` — headless unit tests (no DOM dependency).

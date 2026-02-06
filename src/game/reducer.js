@@ -38,6 +38,35 @@ function deriveContainmentState(pressure, integrity) {
   return 'CRITICAL';
 }
 
+function onboardingModifiers(turn) {
+  if (turn <= 3) {
+    return {
+      corruptionSpawnMultiplier: 0,
+      leakDamageMultiplier: 0.3,
+      pressurePerTurnMultiplier: 0.5,
+    };
+  }
+  if (turn <= 7) {
+    return {
+      corruptionSpawnMultiplier: 0.5,
+      leakDamageMultiplier: 0.5,
+      pressurePerTurnMultiplier: 1,
+    };
+  }
+  if (turn <= 10) {
+    return {
+      corruptionSpawnMultiplier: 0.8,
+      leakDamageMultiplier: 0.8,
+      pressurePerTurnMultiplier: 1,
+    };
+  }
+  return {
+    corruptionSpawnMultiplier: 1,
+    leakDamageMultiplier: 1,
+    pressurePerTurnMultiplier: 1,
+  };
+}
+
 function markShieldAdjacency(state, x, y) {
   for (const [dx, dy] of CARDINAL) {
     const nx = x + dx;
@@ -105,6 +134,8 @@ function spreadCorruption(state) {
 }
 
 function spawnHazards(state) {
+  const { corruptionSpawnMultiplier } = onboardingModifiers(state.turn);
+  const corruptionSpawnChance = state.config.corruptionSpawnChance * corruptionSpawnMultiplier;
   for (let y = 0; y < GRID_SIZE; y += 1) {
     for (let x = 0; x < GRID_SIZE; x += 1) {
       const cell = state.grid[y][x];
@@ -113,7 +144,7 @@ function spawnHazards(state) {
       state.rngState = roll.state;
       if (roll.value < state.config.leakSpawnChance) {
         cell.hazard = 'LEAK';
-      } else if (roll.value < state.config.leakSpawnChance + state.config.corruptionSpawnChance) {
+      } else if (roll.value < state.config.leakSpawnChance + corruptionSpawnChance) {
         cell.hazard = 'CORRUPTION';
       }
     }
@@ -121,12 +152,16 @@ function spawnHazards(state) {
 }
 
 function applyLeakDamage(state) {
+  const { leakDamageMultiplier } = onboardingModifiers(state.turn);
   let damage = 0;
   for (let y = 0; y < GRID_SIZE; y += 1) {
     for (let x = 0; x < GRID_SIZE; x += 1) {
       const cell = state.grid[y][x];
       if (cell.hazard === 'LEAK') {
-        damage += cell.shielded ? Math.max(0, state.config.leakDamagePerSource - state.config.shieldLeakMitigation) : state.config.leakDamagePerSource;
+        const leakDamage = cell.shielded
+          ? Math.max(0, state.config.leakDamagePerSource - state.config.shieldLeakMitigation)
+          : state.config.leakDamagePerSource;
+        damage += leakDamage * leakDamageMultiplier;
       }
     }
   }
@@ -145,7 +180,8 @@ function hasLegalMove(state) {
 }
 
 function finalizeTurn(state) {
-  state.pressure = Math.min(100, state.pressure + state.config.pressurePerTurn);
+  const { pressurePerTurnMultiplier } = onboardingModifiers(state.turn);
+  state.pressure = Math.min(100, state.pressure + state.config.pressurePerTurn * pressurePerTurnMultiplier);
   state.containmentState = deriveContainmentState(state.pressure, state.integrity);
 
   if (state.integrity <= 0) {
