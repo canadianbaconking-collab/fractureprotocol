@@ -1,4 +1,5 @@
 import { MODULE_DEFS, MODULE_ORDER } from '../game/config.js';
+import { getModuleDeltaSummary } from '../game/moduleEffects.js';
 import { reduce } from '../game/reducer.js';
 import { createInitialState } from '../game/state.js';
 
@@ -17,12 +18,18 @@ const startRunButtonEl = document.getElementById('startRunButton');
 const howToButtonEl = document.getElementById('howToButton');
 const helpButtonEl = document.getElementById('helpButton');
 const howToCloseEls = document.querySelectorAll('[data-close-howto]');
+const winTurnsEls = document.querySelectorAll('[data-win-turns]');
+const winTurnsLineEls = document.querySelectorAll('[data-win-turns-line]');
+const moduleDeltaNameEl = document.getElementById('moduleDeltaName');
+const moduleDeltaBadgesEl = document.getElementById('moduleDeltaBadges');
 
 let state = createInitialState({ seed: 4242 });
 let previousState = null;
 let showStartOverlay = true;
 let showHowToOverlay = false;
 let shakeTimeout = null;
+let hoveredModuleId = null;
+let lastDeltaModuleId = null;
 
 function modulePalette(moduleId) {
   switch (moduleId) {
@@ -72,12 +79,29 @@ function renderTray() {
     button.className = `module-btn palette-${modulePalette(moduleId)} ${isActive ? 'active' : ''}`;
     button.innerHTML = `<span>${def.name}</span><small>${trayBadge}</small>`;
     button.disabled = isInTray < 0 || state.phase !== 'PLAYING';
+    button.addEventListener('mouseenter', () => {
+      hoveredModuleId = moduleId;
+      renderModuleDeltas(moduleId);
+    });
+    button.addEventListener('mouseleave', () => {
+      if (hoveredModuleId === moduleId) hoveredModuleId = null;
+      renderModuleDeltas(selected?.moduleId);
+    });
+    button.addEventListener('focus', () => {
+      hoveredModuleId = moduleId;
+      renderModuleDeltas(moduleId);
+    });
+    button.addEventListener('blur', () => {
+      if (hoveredModuleId === moduleId) hoveredModuleId = null;
+      renderModuleDeltas(selected?.moduleId);
+    });
     button.addEventListener('click', () => {
       state = reduce(state, { type: 'SELECT_MODULE', index: isInTray });
       renderTray();
     });
     trayEl.append(button);
   }
+  renderModuleDeltas(hoveredModuleId ?? selected?.moduleId);
 }
 
 function renderHero() {
@@ -87,6 +111,33 @@ function renderHero() {
   integrityStatEl.textContent = `Integrity: ${Math.max(0, state.integrity)}`;
   pressureStatEl.textContent = `Pressure: ${state.pressure}`;
   phaseStatEl.textContent = `Phase: ${state.phase}${state.lossCause ? ` (${state.lossCause})` : ''}`;
+}
+
+function renderModuleDeltas(moduleId) {
+  if (!moduleDeltaBadgesEl || !moduleDeltaNameEl) return;
+  if (!moduleId) return;
+  if (moduleId === lastDeltaModuleId) return;
+  lastDeltaModuleId = moduleId;
+  const summary = getModuleDeltaSummary(moduleId, state);
+  moduleDeltaNameEl.textContent = summary.title;
+  moduleDeltaBadgesEl.innerHTML = '';
+  if (!summary.badges.length) return;
+  for (const badge of summary.badges) {
+    const badgeEl = document.createElement('span');
+    badgeEl.className = `delta-badge ${badge.tone ?? 'neutral'}`;
+    badgeEl.textContent = `${badge.label}: ${badge.value}`;
+    moduleDeltaBadgesEl.append(badgeEl);
+  }
+}
+
+function syncWinTurns() {
+  const winTurns = state.config.winTurns;
+  winTurnsEls.forEach((el) => {
+    el.textContent = winTurns.toString();
+  });
+  winTurnsLineEls.forEach((el) => {
+    el.textContent = `Turn: ${winTurns}/${winTurns}`;
+  });
 }
 
 function wireBackButton() {
@@ -171,6 +222,7 @@ function render() {
 
 wireBackButton();
 wireOverlayButtons();
+syncWinTurns();
 render();
 renderOverlays();
 

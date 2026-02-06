@@ -293,6 +293,11 @@ body.integrity-shake .hero {
   80% { transform: translate3d(1px, -2px, 0); }
 }
 
+@keyframes header-scan {
+  0%, 100% { opacity: 0.4; transform: translateY(-50%) translateX(0); }
+  50% { opacity: 1; transform: translateY(-50%) translateX(-6px); }
+}
+
 .tray {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -393,6 +398,141 @@ body.integrity-shake .hero {
   color: #a8c8ff;
 }
 
+.overlay-goals {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.goal-card {
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  background: rgba(18, 36, 76, 0.6);
+  border: 1px solid rgba(88, 155, 255, 0.4);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.goal-card.goal-loss {
+  border-color: rgba(255, 120, 150, 0.45);
+  background: rgba(60, 16, 34, 0.35);
+}
+
+.goal-label {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.goal-text {
+  margin: 0;
+  color: #c9dbff;
+  font-size: 0.9rem;
+}
+
+.overlay-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.panel {
+  border-radius: 12px;
+  border: 1px solid rgba(88, 155, 255, 0.45);
+  background: rgba(12, 22, 44, 0.85);
+  padding: 0.55rem 0.65rem 0.7rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.panel-loss {
+  border-color: rgba(255, 120, 150, 0.55);
+  background: rgba(36, 12, 26, 0.8);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a9c7ff;
+  position: relative;
+}
+
+.panel-header::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 26px;
+  height: 2px;
+  background: rgba(122, 202, 255, 0.55);
+  transform: translateY(-50%);
+  animation: header-scan 2.6s ease-in-out infinite;
+}
+
+.panel-loss .panel-header::after {
+  background: rgba(255, 146, 176, 0.55);
+}
+
+.panel-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.panel-icon span {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 210, 255, 0.7);
+}
+
+.panel-icon span:nth-child(2) { inset: 4px; opacity: 0.7; }
+.panel-icon span:nth-child(3) { inset: 8px; opacity: 0.5; }
+
+.panel-icon-breach span {
+  border-color: rgba(255, 120, 150, 0.7);
+}
+
+.panel-icon-breach span:nth-child(1) {
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.panel-icon-breach span:nth-child(2) {
+  border-right-color: transparent;
+  border-top-color: transparent;
+}
+
+.panel-lines {
+  display: grid;
+  gap: 0.25rem;
+  font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: #c8d8ff;
+}
+
+.panel-loss .panel-lines {
+  color: #ffd1dc;
+}
+
+.panel-stamp {
+  margin-left: auto;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid rgba(255, 120, 150, 0.8);
+  border-radius: 6px;
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+  color: rgba(255, 150, 175, 0.95);
+}
+
 .overlay-rule {
   padding: 0.5rem 0.75rem;
   border-radius: 10px;
@@ -478,6 +618,65 @@ body.integrity-shake .hero {
 
 .overlay-close {
   justify-self: end;
+}
+
+.module-delta-panel {
+  margin-top: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(88, 155, 255, 0.4);
+  background: rgba(12, 22, 44, 0.75);
+  padding: 0.65rem 0.75rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.module-delta-label {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #8fb7ff;
+}
+
+.module-delta-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e4efff;
+}
+
+.module-delta-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.delta-badge {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid rgba(130, 190, 255, 0.6);
+  color: #cfe5ff;
+  background: rgba(18, 36, 76, 0.65);
+}
+
+.delta-badge.positive {
+  border-color: rgba(110, 255, 186, 0.75);
+  color: #d8ffe9;
+  background: rgba(14, 56, 38, 0.6);
+}
+
+.delta-badge.warning {
+  border-color: rgba(255, 150, 120, 0.75);
+  color: #ffd1c4;
+  background: rgba(66, 24, 20, 0.6);
+}
+
+.delta-badge.neutral {
+  border-color: rgba(150, 170, 220, 0.6);
+  color: #cbd9ff;
+  background: rgba(18, 32, 58, 0.6);
 }
 
 .mono {
