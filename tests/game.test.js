@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { reduce, canPlaceEntry, listValidPlacements } from '../src/game/reducer.js';
-import { createInitialState } from '../src/game/state.js';
+import { cloneState, createInitialState } from '../src/game/state.js';
 
 function stateWithTray(entries, seed = 99) {
   const state = createInitialState({ seed, config: { leakSpawnChance: 0, corruptionSpawnChance: 0, corruptionSpreadChance: 0 } });
@@ -82,4 +82,78 @@ test('listValidPlacements reads from tray index', () => {
   const state = stateWithTray([{ moduleId: 'PUMP' }, { moduleId: 'BRACE', shapeKey: 'LINE3' }]);
   const p = listValidPlacements(state, 1);
   assert.ok(p.length > 0);
+});
+
+test('onboarding ramp reduces early corruption, leak damage, and pressure', () => {
+  const baseConfig = {
+    leakSpawnChance: 0,
+    corruptionSpawnChance: 1,
+    corruptionSpreadChance: 0,
+    pressurePerTurn: 0,
+    leakDamagePerSource: 0,
+    shieldLeakMitigation: 0,
+  };
+
+  const spawnEarly = createInitialState({ seed: 101, config: baseConfig });
+  spawnEarly.tray = [{ moduleId: 'BRACE', shapeKey: 'BLOCK' }];
+  spawnEarly.selectedModule = spawnEarly.tray[0];
+  spawnEarly.turn = 1;
+
+  const spawnBaseline = cloneState(spawnEarly);
+  spawnBaseline.turn = 11;
+
+  const spawnEarlyResolved = reduce(spawnEarly, { type: 'PLACE_SELECTED', x: 0, y: 0 });
+  const spawnBaselineResolved = reduce(spawnBaseline, { type: 'PLACE_SELECTED', x: 0, y: 0 });
+
+  const countCorruption = (state) => state.grid.flat().filter((cell) => cell.hazard === 'CORRUPTION').length;
+  assert.equal(countCorruption(spawnEarlyResolved), 0);
+  assert.ok(countCorruption(spawnBaselineResolved) > 0);
+
+  const spreadConfig = {
+    leakSpawnChance: 0,
+    corruptionSpawnChance: 0,
+    corruptionSpreadChance: 1,
+    pressurePerTurn: 0,
+    leakDamagePerSource: 0,
+    shieldLeakMitigation: 0,
+  };
+  const spreadEarly = createInitialState({ seed: 202, config: spreadConfig });
+  spreadEarly.tray = [{ moduleId: 'BRACE', shapeKey: 'BLOCK' }];
+  spreadEarly.selectedModule = spreadEarly.tray[0];
+  spreadEarly.turn = 1;
+  spreadEarly.grid[4][4].hazard = 'CORRUPTION';
+
+  const spreadBaseline = cloneState(spreadEarly);
+  spreadBaseline.turn = 11;
+
+  const spreadEarlyResolved = reduce(spreadEarly, { type: 'PLACE_SELECTED', x: 0, y: 0 });
+  const spreadBaselineResolved = reduce(spreadBaseline, { type: 'PLACE_SELECTED', x: 0, y: 0 });
+
+  assert.equal(countCorruption(spreadEarlyResolved), 1);
+  assert.ok(countCorruption(spreadBaselineResolved) > 1);
+
+  const damageConfig = {
+    leakSpawnChance: 0,
+    corruptionSpawnChance: 0,
+    corruptionSpreadChance: 0,
+    pressurePerTurn: 10,
+    leakDamagePerSource: 10,
+    shieldLeakMitigation: 0,
+  };
+  const damageEarly = createInitialState({ seed: 303, config: damageConfig });
+  damageEarly.tray = [{ moduleId: 'BRACE', shapeKey: 'BLOCK' }];
+  damageEarly.selectedModule = damageEarly.tray[0];
+  damageEarly.turn = 1;
+  damageEarly.grid[4][4].hazard = 'LEAK';
+
+  const damageBaseline = cloneState(damageEarly);
+  damageBaseline.turn = 11;
+
+  const damageEarlyResolved = reduce(damageEarly, { type: 'PLACE_SELECTED', x: 0, y: 0 });
+  const damageBaselineResolved = reduce(damageBaseline, { type: 'PLACE_SELECTED', x: 0, y: 0 });
+
+  assert.equal(damageEarlyResolved.integrity, 97);
+  assert.equal(damageBaselineResolved.integrity, 90);
+  assert.equal(damageEarlyResolved.pressure, 6);
+  assert.equal(damageBaselineResolved.pressure, 10);
 });
