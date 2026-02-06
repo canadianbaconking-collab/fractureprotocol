@@ -152,8 +152,57 @@ test('onboarding ramp reduces early corruption, leak damage, and pressure', () =
   const damageEarlyResolved = reduce(damageEarly, { type: 'PLACE_SELECTED', x: 0, y: 0 });
   const damageBaselineResolved = reduce(damageBaseline, { type: 'PLACE_SELECTED', x: 0, y: 0 });
 
-  assert.equal(damageEarlyResolved.integrity, 97);
+  assert.equal(damageEarlyResolved.integrity, 97.5);
   assert.equal(damageBaselineResolved.integrity, 90);
   assert.equal(damageEarlyResolved.pressure, 6);
   assert.equal(damageBaselineResolved.pressure, 10);
+
+  const leakSpawnConfig = {
+    leakSpawnChance: 1,
+    corruptionSpawnChance: 0,
+    corruptionSpreadChance: 0,
+    pressurePerTurn: 0,
+    leakDamagePerSource: 0,
+    shieldLeakMitigation: 0,
+  };
+  const leakSpawnEarly = createInitialState({ seed: 404, config: leakSpawnConfig });
+  leakSpawnEarly.tray = [{ moduleId: 'BRACE', shapeKey: 'BLOCK' }];
+  leakSpawnEarly.selectedModule = leakSpawnEarly.tray[0];
+  leakSpawnEarly.turn = 1;
+
+  const leakSpawnBaseline = cloneState(leakSpawnEarly);
+  leakSpawnBaseline.turn = 11;
+
+  const leakSpawnEarlyResolved = reduce(leakSpawnEarly, { type: 'PLACE_SELECTED', x: 0, y: 0 });
+  const leakSpawnBaselineResolved = reduce(leakSpawnBaseline, { type: 'PLACE_SELECTED', x: 0, y: 0 });
+
+  const countLeaks = (state) => state.grid.flat().filter((cell) => cell.hazard === 'LEAK').length;
+  assert.equal(countLeaks(leakSpawnEarlyResolved), 0);
+  assert.ok(countLeaks(leakSpawnBaselineResolved) > 0);
+});
+
+test('leak growth is gated off in turns 1-3', () => {
+  const config = {
+    leakSpawnChance: 1,
+    corruptionSpawnChance: 0,
+    corruptionSpreadChance: 0,
+    pressurePerTurn: 0,
+    leakDamagePerSource: 0,
+    shieldLeakMitigation: 0,
+  };
+  const early = createInitialState({ seed: 505, config });
+  early.tray = [{ moduleId: 'PUMP' }];
+  early.selectedModule = early.tray[0];
+  early.turn = 2;
+  early.grid[4][4].hazard = 'LEAK';
+
+  const baseline = cloneState(early);
+  baseline.turn = 11;
+
+  const earlyResolved = reduce(early, { type: 'PLACE_SELECTED', x: 0, y: 0 });
+  const baselineResolved = reduce(baseline, { type: 'PLACE_SELECTED', x: 0, y: 0 });
+
+  const countLeaks = (state) => state.grid.flat().filter((cell) => cell.hazard === 'LEAK').length;
+  assert.equal(countLeaks(earlyResolved), 1);
+  assert.ok(countLeaks(baselineResolved) > 1);
 });
