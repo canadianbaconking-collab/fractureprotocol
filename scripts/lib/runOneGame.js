@@ -1,4 +1,4 @@
-import { reduce, listValidPlacements } from '../../src/game/reducer.js';
+import { reduce, listValidPlacements, onboardingModifiers } from '../../src/game/reducer.js';
 import { cloneState, createInitialState } from '../../src/game/state.js';
 import { createRng } from '../../src/game/random.js';
 
@@ -57,16 +57,64 @@ export function chooseAction(state, policy, rng) {
   }
 }
 
-export function runOneGame({ seed, policy = 'greedy', maxTurns = 200 } = {}) {
+function formatNumber(value) {
+  if (Number.isInteger(value)) return `${value}`;
+  return value.toFixed(2);
+}
+
+function formatDelta(delta) {
+  const formatted = formatNumber(delta);
+  return delta >= 0 ? `+${formatted}` : formatted;
+}
+
+function countHazards(grid) {
+  return grid.flat().reduce(
+    (acc, cell) => {
+      if (cell.hazard === 'CORRUPTION') acc.corruption += 1;
+      if (cell.hazard === 'LEAK') acc.leak += 1;
+      return acc;
+    },
+    { corruption: 0, leak: 0 },
+  );
+}
+
+export function runOneGame({
+  seed,
+  policy = 'greedy',
+  maxTurns = 200,
+  traceTurns = 0,
+  onTrace,
+} = {}) {
   let state = createInitialState({ seed });
   const rng = createRng(`${seed}-${policy}`);
   const turnCap = Math.min(maxTurns, state.config.winTurns);
+  const shouldTrace = traceTurns > 0 && typeof onTrace === 'function';
 
   while (state.phase === 'PLAYING' && state.turn <= turnCap) {
     const action = chooseAction(state, policy, rng);
     if (!action) break;
     state = reduce(state, { type: 'SELECT_MODULE', index: action.index });
+    const prevState = state;
     state = reduce(state, { type: 'PLACE_SELECTED', x: action.x, y: action.y });
+    const turnResolved = prevState.turn;
+    if (shouldTrace && turnResolved <= traceTurns) {
+      const integrityDelta = state.integrity - prevState.integrity;
+      const pressureDelta = state.pressure - prevState.pressure;
+      const hazardCounts = countHazards(state.grid);
+      const modifiers = onboardingModifiers(turnResolved);
+      const line = [
+        `T${turnResolved}`,
+        `int ${formatNumber(state.integrity)} (${formatDelta(integrityDelta)})`,
+        `pres ${formatNumber(state.pressure)} (${formatDelta(pressureDelta)})`,
+        `corr ${hazardCounts.corruption}`,
+        `leak ${hazardCounts.leak}`,
+        `mods s${formatNumber(modifiers.corruptionSpawnMultiplier)}`,
+        `sp${formatNumber(modifiers.corruptionSpreadMultiplier)}`,
+        `l${formatNumber(modifiers.leakDamageMultiplier)}`,
+        `p${formatNumber(modifiers.pressurePerTurnMultiplier)}`,
+      ].join(' | ');
+      onTrace(line);
+    }
   }
 
   return state;

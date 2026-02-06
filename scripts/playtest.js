@@ -5,6 +5,7 @@ function parseArgs(argv) {
     runs: 100,
     seedStart: 1000,
     policy: 'greedy',
+    trace: 0,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -34,19 +35,37 @@ function parseArgs(argv) {
     }
     if (value.startsWith('--policy=')) {
       args.policy = value.split('=')[1];
+      continue;
+    }
+    if (value === '--trace' && argv[i + 1]) {
+      args.trace = Number(argv[i + 1]);
+      i += 1;
+      continue;
+    }
+    if (value.startsWith('--trace=')) {
+      args.trace = Number(value.split('=')[1]);
     }
   }
 
   args.runs = Number.isFinite(args.runs) && args.runs > 0 ? Math.floor(args.runs) : 100;
   args.seedStart = Number.isFinite(args.seedStart) ? Math.floor(args.seedStart) : 1000;
+  args.trace = Number.isFinite(args.trace) && args.trace > 0 ? Math.floor(args.trace) : 0;
   return args;
 }
 
-const { runs, seedStart, policy } = parseArgs(process.argv.slice(2));
+const { runs, seedStart, policy, trace } = parseArgs(process.argv.slice(2));
 
 const results = [];
 for (let i = 0; i < runs; i += 1) {
-  results.push(runOneGame({ seed: seedStart + i, policy }));
+  const traceTurns = i === 0 ? trace : 0;
+  results.push(
+    runOneGame({
+      seed: seedStart + i,
+      policy,
+      traceTurns,
+      onTrace: traceTurns > 0 ? (line) => console.log(line) : undefined,
+    }),
+  );
 }
 
 const metrics = summarizeResults(results);

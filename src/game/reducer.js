@@ -38,7 +38,7 @@ function deriveContainmentState(pressure, integrity) {
   return 'CRITICAL';
 }
 
-function onboardingModifiers(turn) {
+export function onboardingModifiers(turn) {
   if (turn <= 3) {
     return {
       corruptionSpawnMultiplier: 0,
