@@ -41,7 +41,7 @@ export const MODULE_DEFS = {
 
 export const GAME_CONFIG = {
   seed: 42,
-  winTurns: 20,
+  winTurns: 75,
   startingIntegrity: 100,
   startingPressure: 0,
   pressurePerTurn: 5,

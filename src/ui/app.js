@@ -19,8 +19,10 @@ const helpButtonEl = document.getElementById('helpButton');
 const howToCloseEls = document.querySelectorAll('[data-close-howto]');
 
 let state = createInitialState({ seed: 4242 });
+let previousState = null;
 let showStartOverlay = true;
 let showHowToOverlay = false;
+let shakeTimeout = null;
 
 function modulePalette(moduleId) {
   switch (moduleId) {
@@ -32,11 +34,13 @@ function modulePalette(moduleId) {
   }
 }
 
-function renderGrid() {
+function renderGrid(prevState) {
   gridEl.innerHTML = '';
   for (let y = 0; y < state.grid.length; y += 1) {
     for (let x = 0; x < state.grid[y].length; x += 1) {
       const cell = state.grid[y][x];
+      const prevCell = prevState?.grid?.[y]?.[x] ?? null;
+      const isNewHazard = cell.hazard && !prevCell?.hazard;
       const button = document.createElement('button');
       button.className = 'cell';
       if (cell.module) {
@@ -45,6 +49,7 @@ function renderGrid() {
       if (cell.shielded) button.classList.add('shielded');
       if (cell.hazard === 'CORRUPTION') button.classList.add('hazard-corruption');
       if (cell.hazard === 'LEAK') button.classList.add('hazard-leak');
+      if (isNewHazard) button.classList.add('hazard-spawn');
       button.disabled = state.phase !== 'PLAYING';
       button.addEventListener('click', () => {
         state = reduce(state, { type: 'PLACE_SELECTED', x, y });
@@ -149,9 +154,19 @@ function wireOverlayButtons() {
 }
 
 function render() {
+  const prevState = previousState;
   renderHero();
-  renderGrid();
+  renderGrid(prevState);
   renderTray();
+  if (prevState && state.integrity < prevState.integrity) {
+    document.body.classList.remove('integrity-shake');
+    window.clearTimeout(shakeTimeout);
+    document.body.classList.add('integrity-shake');
+    shakeTimeout = window.setTimeout(() => {
+      document.body.classList.remove('integrity-shake');
+    }, 450);
+  }
+  previousState = state;
 }
 
 wireBackButton();
