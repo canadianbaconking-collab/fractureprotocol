@@ -14,6 +14,7 @@
     <main class="app-shell">
       <section class="hero">
         <h1>Containment Core</h1>
+        <button id="helpButton" class="hud-help" type="button" aria-label="How to Play">?</button>
         <div id="coreOrb" class="core-orb NORMAL"></div>
         <p id="coreStateLabel">NORMAL</p>
         <div class="stats">
@@ -33,6 +34,50 @@
         <div id="moduleTray" class="tray"></div>
       </section>
     </main>
+    <div id="startOverlay" class="overlay is-active" role="dialog" aria-modal="true">
+      <div class="overlay-card">
+        <p class="overlay-eyebrow">Protocol Online</p>
+        <h2>Fracture Protocol</h2>
+        <p class="overlay-subhead">Stabilize containment. Survive the protocol.</p>
+        <div class="overlay-rule">
+          <strong>Win:</strong> survive <span class="mono">winTurns</span> turns.
+        </div>
+        <div class="overlay-rule">
+          <strong>Loss:</strong> Integrity 0 or Pressure 100.
+        </div>
+        <div class="overlay-actions">
+          <button id="startRunButton" class="btn-primary" type="button">Start Run</button>
+          <button id="howToButton" class="btn-ghost" type="button">How to Play</button>
+        </div>
+      </div>
+    </div>
+    <div id="howToOverlay" class="overlay" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="overlay-card overlay-card-wide">
+        <div class="overlay-header">
+          <h2>How to Play</h2>
+          <button class="btn-icon" type="button" aria-label="Close" data-close-howto>✕</button>
+        </div>
+        <ul class="overlay-list">
+          <li>Place modules onto the 8x8 grid during the PLAYING phase.</li>
+          <li>Three deterministic modules are active in the tray at once.</li>
+          <li>Shielded tiles protect against spreading hazards and leaks.</li>
+          <li><strong>Win:</strong> survive <span class="mono">winTurns</span> turns.</li>
+          <li><strong>Loss:</strong> Integrity 0 or Pressure 100.</li>
+        </ul>
+        <div class="overlay-divider"></div>
+        <div class="overlay-modules">
+          <h3>Module quick brief</h3>
+          <ul>
+            <li><strong>Brace:</strong> deploy bracing to lock down space.</li>
+            <li><strong>Shield Core:</strong> 1x1 core that shields adjacent tiles.</li>
+            <li><strong>Purge:</strong> clears hazards in a 3x3 zone.</li>
+            <li><strong>Pump:</strong> lowers pressure immediately.</li>
+            <li><strong>Cycler:</strong> rerolls the active tray modules.</li>
+          </ul>
+        </div>
+        <button class="btn-ghost overlay-close" type="button" data-close-howto>Close</button>
+      </div>
+    </div>
     <script type="module" src="./src/ui/app.js"></script>
   </body>
 </html>

@@ -26,6 +26,10 @@ body {
   padding: 0.75rem;
 }
 
+.hero {
+  position: relative;
+}
+
 .hero h1, .tray-panel h2 {
   margin: 0 0 0.5rem;
   font-size: 1rem;
@@ -120,6 +124,168 @@ body {
 .palette-purge { border-color: #ffd39366; }
 .palette-cycler { border-color: #75dcff66; }
 
+.hud-help {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid #4fd5ff;
+  background: rgba(9, 22, 44, 0.9);
+  color: #bff4ff;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(79, 213, 255, 0.5);
+  cursor: pointer;
+}
+
+.hud-help:hover {
+  box-shadow: 0 0 16px rgba(79, 213, 255, 0.8);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 16, 0.88);
+  display: grid;
+  place-items: center;
+  z-index: 30;
+  padding: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+.overlay.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.overlay-card {
+  width: min(420px, 100%);
+  background: rgba(9, 18, 40, 0.96);
+  border: 1px solid #3a6dcc;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 0 24px rgba(76, 186, 255, 0.25);
+  display: grid;
+  gap: 0.8rem;
+}
+
+.overlay-card-wide {
+  width: min(520px, 100%);
+}
+
+.overlay-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.65rem;
+  color: #7fd6ff;
+}
+
+.overlay-card h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  text-shadow: 0 0 12px rgba(94, 211, 255, 0.6);
+}
+
+.overlay-subhead {
+  margin: 0;
+  color: #a8c8ff;
+}
+
+.overlay-rule {
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(18, 36, 76, 0.6);
+  border: 1px solid rgba(88, 155, 255, 0.4);
+}
+
+.overlay-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.btn-primary,
+.btn-ghost,
+.btn-icon {
+  font: inherit;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  border: 1px solid #69f2ff;
+  background: linear-gradient(180deg, #1a6fd0, #124196);
+  color: #e8fbff;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 0 14px rgba(77, 200, 255, 0.4);
+}
+
+.btn-ghost {
+  border: 1px solid #4765c2;
+  background: transparent;
+  color: #c8d8ff;
+  padding: 0.55rem 1rem;
+}
+
+.btn-icon {
+  border: 1px solid #4667ba;
+  background: rgba(12, 23, 44, 0.8);
+  color: #cbe2ff;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+}
+
+.overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.overlay-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #d3e0ff;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.overlay-divider {
+  height: 1px;
+  background: rgba(90, 146, 255, 0.4);
+}
+
+.overlay-modules h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.overlay-modules ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.35rem;
+  color: #c7d7ff;
+}
+
+.overlay-close {
+  justify-self: end;
+}
+
+.mono {
+  font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace;
+  letter-spacing: 0.02em;
+}
 
 .boot-splash {
   position: fixed;
