@@ -37,7 +37,7 @@ test('pump reduces pressure with floor at zero and applies turn tick', () => {
   const state = stateWithTray([{ moduleId: 'PUMP' }]);
   state.pressure = 3;
   const next = reduce(state, { type: 'PLACE_SELECTED', x: 0, y: 0 });
-  assert.equal(next.pressure, 5); // max(0,3-8)+5 per turn
+  assert.equal(next.pressure, 3); // max(0,3-8)+5*0.6 per turn (turn 1 ramp)
 });
 
 test('cycler reroll is deterministic from seed', () => {
@@ -54,6 +54,7 @@ test('corruption spread is deterministic with fixed seed', () => {
   const initial = createInitialState({ seed: 77, config: { leakSpawnChance: 0, corruptionSpawnChance: 0, corruptionSpreadChance: 1 } });
   initial.tray = [{ moduleId: 'PUMP' }];
   initial.selectedModule = initial.tray[0];
+  initial.turn = 11;
   initial.grid[4][4].hazard = 'CORRUPTION';
 
   const next = reduce(initial, { type: 'PLACE_SELECTED', x: 0, y: 0 });
