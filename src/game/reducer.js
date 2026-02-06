@@ -119,7 +119,7 @@ function resolveModuleEffects(state, entry, cells) {
 
 function spreadCorruption(state) {
   const { corruptionSpreadMultiplier } = onboardingModifiers(state.turn);
-  const spreadChance = state.config.corruptionSpreadChance * corruptionSpreadMultiplier;
+  const spreadChance = state.config.corruptionSpreadChance * corruptionSpreadMultiplier * 0.75;
   if (spreadChance <= 0) return;
   const additions = [];
   for (let y = 0; y < GRID_SIZE; y += 1) {
