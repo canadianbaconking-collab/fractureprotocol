@@ -9,6 +9,9 @@ Deterministic, reducer-driven neon containment puzzle prototype (web-first + And
 - Win: survive `winTurns` turns.
 - Loss: integrity reaches `0`, pressure reaches `100`, or no legal move.
 
+## How to Play
+Place modules onto the 8x8 grid during the PLAYING phase while three deterministic tray modules are active; shielded tiles help mitigate hazards, you win by surviving `winTurns` turns, and you lose at Integrity 0 or Pressure 100. Module quick brief: Brace locks down space, Shield Core is a 1x1 core that shields adjacent tiles, Purge clears hazards in a 3x3 zone, Pump lowers pressure immediately, and Cycler rerolls the active tray modules.
+
 ## Module Set A
 Bottom tray shows 5 module cards, with **3 deterministic tray entries active at a time**.
 

@@ -11,8 +11,16 @@ const integrityStatEl = document.getElementById('integrityStat');
 const pressureStatEl = document.getElementById('pressureStat');
 const phaseStatEl = document.getElementById('phaseStat');
 const bootSplashEl = document.getElementById('bootSplash');
+const startOverlayEl = document.getElementById('startOverlay');
+const howToOverlayEl = document.getElementById('howToOverlay');
+const startRunButtonEl = document.getElementById('startRunButton');
+const howToButtonEl = document.getElementById('howToButton');
+const helpButtonEl = document.getElementById('helpButton');
+const howToCloseEls = document.querySelectorAll('[data-close-howto]');
 
 let state = createInitialState({ seed: 4242 });
+let showStartOverlay = true;
+let showHowToOverlay = false;
 
 function modulePalette(moduleId) {
   switch (moduleId) {
@@ -78,6 +86,11 @@ function renderHero() {
 
 function wireBackButton() {
   document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && showHowToOverlay) {
+      showHowToOverlay = false;
+      renderOverlays();
+      return;
+    }
     if (event.key === 'Escape' && state.phase !== 'PLAYING') {
       state = createInitialState({ seed: 4242 });
       render();
@@ -97,6 +110,44 @@ function wireBackButton() {
   }
 }
 
+function renderOverlays() {
+  if (startOverlayEl) {
+    startOverlayEl.classList.toggle('is-active', showStartOverlay);
+  }
+  if (howToOverlayEl) {
+    howToOverlayEl.classList.toggle('is-active', showHowToOverlay);
+    howToOverlayEl.setAttribute('aria-hidden', (!showHowToOverlay).toString());
+  }
+}
+
+function wireOverlayButtons() {
+  startRunButtonEl?.addEventListener('click', () => {
+    showStartOverlay = false;
+    showHowToOverlay = false;
+    renderOverlays();
+  });
+  howToButtonEl?.addEventListener('click', () => {
+    showHowToOverlay = true;
+    renderOverlays();
+  });
+  helpButtonEl?.addEventListener('click', () => {
+    showHowToOverlay = true;
+    renderOverlays();
+  });
+  howToCloseEls.forEach((button) => {
+    button.addEventListener('click', () => {
+      showHowToOverlay = false;
+      renderOverlays();
+    });
+  });
+  howToOverlayEl?.addEventListener('click', (event) => {
+    if (event.target === howToOverlayEl) {
+      showHowToOverlay = false;
+      renderOverlays();
+    }
+  });
+}
+
 function render() {
   renderHero();
   renderGrid();
@@ -104,6 +155,8 @@ function render() {
 }
 
 wireBackButton();
+wireOverlayButtons();
 render();
+renderOverlays();
 
 setTimeout(() => bootSplashEl?.classList.add('hidden'), 1200);
