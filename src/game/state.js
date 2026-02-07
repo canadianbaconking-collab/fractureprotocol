@@ -1,13 +1,62 @@
-import { BRACE_SHAPES, GAME_CONFIG, GRID_SIZE, MODULE_ORDER, TRAY_SIZE } from './config.js';
-import { normalizeSeed, randomInt } from './random.js';
+import {
+  BRACE_SHAPES,
+  CORRUPTION_TYPES,
+  GAME_CONFIG,
+  GRID_SIZE,
+  MODULE_ORDER,
+  RELIC_IDS,
+  RESONANCE_TYPES,
+  TRAY_SIZE
+} from './config.js';
+import { normalizeSeed, randomFloat01, randomInt } from './random.js';
 
 function makeCell() {
   return {
     module: null,
     moduleMeta: null,
     hazard: null,
+    hazardType: null,
     shielded: false,
+    containmentWallTurns: 0,
+    stabilityFieldTurns: 0,
+    synergyLinkType: null,
+    synergyLinkTurns: 0,
   };
+}
+
+function cloneResonanceMap(map) {
+  return map.map((row) => row.map((entry) => ({ ...entry })));
+}
+
+function createResonanceMap(seed, config) {
+  const map = Array.from({ length: GRID_SIZE }, () => Array.from({ length: GRID_SIZE }, () => ({ type: null, revealed: false })));
+  let cursor = normalizeSeed(`${seed}-resonance`);
+  for (let y = 0; y < GRID_SIZE; y += 1) {
+    for (let x = 0; x < GRID_SIZE; x += 1) {
+      const roll = randomFloat01(cursor);
+      cursor = roll.state;
+      if (roll.value < config.resonanceChance) {
+        const pick = randomInt(cursor, RESONANCE_TYPES.length);
+        cursor = pick.state;
+        map[y][x] = { type: RESONANCE_TYPES[pick.value], revealed: false };
+      }
+    }
+  }
+  return map;
+}
+
+function createRelicState() {
+  return RELIC_IDS.reduce((acc, id) => {
+    acc[id] = false;
+    return acc;
+  }, {});
+}
+
+function createCorruptionTypeCounts() {
+  return CORRUPTION_TYPES.reduce((acc, type) => {
+    acc[type] = 0;
+    return acc;
+  }, {});
 }
 
 export function cloneState(state) {
@@ -17,6 +66,12 @@ export function cloneState(state) {
     tray: state.tray.map((entry) => ({ ...entry })),
     log: [...state.log],
     config: { ...state.config },
+    resonanceMap: cloneResonanceMap(state.resonanceMap),
+    relics: { ...state.relics },
+    metrics: {
+      ...state.metrics,
+      corruptionTypeCounts: { ...state.metrics.corruptionTypeCounts },
+    },
   };
 }
 
@@ -49,6 +104,7 @@ export function createInitialState(overrides = {}) {
   const grid = Array.from({ length: GRID_SIZE }, () => Array.from({ length: GRID_SIZE }, makeCell));
   const seed = normalizeSeed(overrides.seed ?? config.seed);
   const initialTray = fillTray(seed, TRAY_SIZE);
+  const resonanceMap = createResonanceMap(seed, config);
 
   return {
     turn: 1,
@@ -64,6 +120,13 @@ export function createInitialState(overrides = {}) {
     grid,
     log: [],
     config,
+    resonanceMap,
+    relics: createRelicState(),
+    integrityRegenTurns: 0,
+    metrics: {
+      resonanceActivations: 0,
+      corruptionTypeCounts: createCorruptionTypeCounts(),
+    },
   };
 }
 

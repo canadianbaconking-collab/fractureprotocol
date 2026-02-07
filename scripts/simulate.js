@@ -23,3 +23,5 @@ console.log('Simulation results (100 seeded runs)');
 console.log(`Avg turns survived: ${metrics.avgTurns.toFixed(2)}`);
 console.log(`Wins: ${metrics.wins}`);
 console.log(`Loss causes: ${lossSummary}`);
+console.log(`Avg resonance activations: ${metrics.avgResonanceActivations.toFixed(2)}`);
+console.log(`Corruption types: ${Object.entries(metrics.corruptionTypeCounts).map(([type, count]) => `${type}:${count}`).join(' | ') || 'None'}`);

@@ -3,6 +3,10 @@ export const TRAY_SIZE = 3;
 
 export const MODULE_ORDER = ['BRACE', 'SHIELD_CORE', 'PURGE', 'PUMP', 'CYCLER'];
 
+export const RESONANCE_TYPES = ['AMPLIFIER', 'STABILIZER', 'OVERLOAD', 'CYCLONIC'];
+export const CORRUPTION_TYPES = ['CREEPER', 'SPIKER', 'DORMANT'];
+export const RELIC_IDS = ['PURIFIER_LENS', 'STRUCTURAL_MEMORY', 'ENTROPY_DAMPENER'];
+
 export const BRACE_SHAPES = {
   BLOCK: {
     key: 'BLOCK',
@@ -46,12 +50,33 @@ export const GAME_CONFIG = {
   startingPressure: 0,
   pressurePerTurn: 5,
   pumpPressureReduction: 8,
+  purgeRadius: 1,
+  shieldAdjacencyRadius: 1,
   corruptionSpreadChance: 0.35,
   leakSpawnChance: 0.08,
   corruptionSpawnChance: 0.1,
   leakDamagePerSource: 2,
   shieldLeakMitigation: 1,
   purgePattern: '3x3-centered',
+  resonanceChance: 0.12,
+  overloadPressurePenalty: 3,
+  overloadPumpBonus: 2,
+  stabilizerRegenTurns: 3,
+  stabilizerRegenAmount: 1,
+  containmentWallTurns: 2,
+  stabilityFieldTurns: 2,
+  synergyGlowTurns: 2,
+  stabilityFieldSpreadMultiplier: 0.55,
+  creeperSpreadMultiplier: 0.7,
+  creeperResistChance: 0.5,
+  spikerJumpChance: 0.25,
+  dormantPressureThreshold: 55,
+  relicMilestones: [20, 40, 60],
+  relicRandomChance: 0.08,
+  entropyDampenerMultiplier: 0.8,
+  purifierLensBonus: 1,
+  structuralMemoryRegenTurns: 2,
+  structuralMemoryRegenAmount: 1,
 };
 
 export const CORE_STATE_THRESHOLDS = {

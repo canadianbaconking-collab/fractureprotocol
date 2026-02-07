@@ -125,6 +125,16 @@ export function summarizeResults(results) {
   const wins = results.filter((s) => s.phase === 'WON').length;
   const losses = results.filter((s) => s.phase === 'LOST').length;
   const avgTurns = runs ? results.reduce((acc, s) => acc + s.turn, 0) / runs : 0;
+  const avgResonanceActivations = runs
+    ? results.reduce((acc, s) => acc + (s.metrics?.resonanceActivations ?? 0), 0) / runs
+    : 0;
+  const corruptionTypeCounts = results.reduce((acc, s) => {
+    const counts = s.metrics?.corruptionTypeCounts ?? {};
+    Object.keys(counts).forEach((type) => {
+      acc[type] = (acc[type] ?? 0) + counts[type];
+    });
+    return acc;
+  }, {});
   const lost = results.filter((s) => s.phase === 'LOST');
   const lossBreakdown = lost.reduce((acc, s) => {
     if (!s.lossCause) return acc;
@@ -137,6 +147,8 @@ export function summarizeResults(results) {
     wins,
     losses,
     avgTurns,
+    avgResonanceActivations,
+    corruptionTypeCounts,
     lossBreakdown,
   };
 }

@@ -36,6 +36,10 @@
 
       <section class="tray-panel">
         <h2>Modules</h2>
+        <div class="relic-bar">
+          <span class="relic-label">Relics</span>
+          <div id="relicTray" class="relic-tray" aria-live="polite"></div>
+        </div>
         <div id="moduleTray" class="tray"></div>
         <div id="moduleDeltaPanel" class="module-delta-panel" aria-live="polite">
           <p class="module-delta-label">Module Effect</p>
@@ -49,6 +53,8 @@
       <div class="breach-ring"></div>
       <div class="breach-ring breach-ring-secondary"></div>
     </div>
+    <div id="winTerminal" class="win-terminal" aria-live="polite"></div>
+    <div id="winPulse" class="win-pulse" aria-hidden="true"></div>
     <div id="startOverlay" class="overlay is-active" role="dialog" aria-modal="true">
       <div class="overlay-card">
         <p class="overlay-eyebrow">Protocol Online</p>
@@ -149,6 +155,19 @@
         </div>
         <div class="overlay-actions">
           <button id="playAgainButton" class="btn-primary" type="button">RESTART</button>
+        </div>
+      </div>
+    </div>
+    <div id="winOverlay" class="overlay win-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="overlay-card win-card">
+        <p class="overlay-eyebrow">Containment Status</p>
+        <h2>Containment Stabilized</h2>
+        <div class="game-over-score">
+          <span class="score-label">Final Score</span>
+          <span id="winScoreValue" class="score-value mono">0</span>
+        </div>
+        <div class="overlay-actions">
+          <button id="winRestartButton" class="btn-primary" type="button">RESTART</button>
         </div>
       </div>
     </div>
